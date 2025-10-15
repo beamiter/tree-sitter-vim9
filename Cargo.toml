@@ -1,5 +1,5 @@
 [package]
-name = "tree-sitter-vim"
+name = "tree-sitter-vim9"
 description = "tree-sitter vimscript9 parser"
 version = "0.1.0"
 authors = ["beamiter <beamiter@163.com>"]

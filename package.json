@@ -1,5 +1,5 @@
 {
-  "name": "tree-sitter-vim",
+  "name": "tree-sitter-vim9",
   "version": "0.1.0",
   "description": "tree-sitter vimscript9 parser",
   "repository": "https://github.com/beamiter/tree-sitter-vim9",
