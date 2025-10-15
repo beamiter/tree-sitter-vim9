@@ -138,7 +138,10 @@ module.exports = grammar({
   rules: {
     script_file: ($) => optional($._separated_statements),
 
-    _cmd_separator: ($) => choice($._newline_or_pipe, $.comment),
+    _cmd_separator: ($) => choice($._newline_or_pipe, $.comment, $.hash_comment),
+
+    // Vim9: 行内哈希注释，且不与 "#{...}" 冲突（首字符不能是 '{'）
+    hash_comment: ($) => token(seq("#", /[^\{\n]/, repeat(/[^\n]/))),
 
     _separated_statements: ($) =>
       repeat1(seq(optional($._statement), $._cmd_separator)),
@@ -147,7 +150,10 @@ module.exports = grammar({
       seq(
         repeat(":"),
         choice(
+          $.vim9script_statement,
+          $.vim9_function_definition,
           $.function_definition,
+          $.var_statement,
           $.let_statement,
           $.unlet_statement,
           $.const_statement,
@@ -216,6 +222,9 @@ module.exports = grammar({
           $.user_command
         )
       ),
+
+    // Vim9 顶层指令
+    vim9script_statement: ($) => keyword($, "vim9script"),
 
     unknown_builtin_statement: ($) =>
       seq(
@@ -522,6 +531,31 @@ module.exports = grammar({
         choice($._const_assignment, repeat($._assignment_variable))
       ),
 
+    // Vim9 var 声明
+    type_identifier: ($) =>
+      seq(
+        field("name", token(/[A-Za-z_]\w*/)),
+        optional(seq("<", commaSep1($.type_identifier), ">")),
+        optional(seq("[", "]"))
+      ),
+
+    var_declarator: ($) =>
+      seq(
+        field("name", choice($.identifier, $.list_assignment)),
+        optional(seq(":", field("type", $.type_identifier))),
+        optional(seq("=", field("value", $._expression)))
+      ),
+
+    var_statement: ($) =>
+      seq(
+        keyword($, "var"),
+        // 支持逗号或空白分隔的多个声明
+        seq(
+          $.var_declarator,
+          repeat(seq(choice(",", /[ \t]+/), $.var_declarator))
+        )
+      ),
+
     _let_heredoc: ($) =>
       seq(
         "=<<",
@@ -613,6 +647,7 @@ module.exports = grammar({
 
     command_argument: ($) => choice($.string_literal, /\S+/),
 
+    // 传统 function ... endfunction
     function_definition: ($) =>
       seq(
         maybe_bang($, keyword($, "function")),
@@ -649,6 +684,36 @@ module.exports = grammar({
 
     default_parameter: ($) =>
       seq(field("name", $.identifier), "=", field("value", $._expression)),
+
+    // Vim9: def ... enddef（带返回类型）
+    vim9_parameter: ($) =>
+      seq(
+        field("name", $.identifier),
+        optional(seq(":", field("type", $.type_identifier))),
+        optional(seq("=", field("value", $._expression)))
+      ),
+
+    vim9_parameters: ($) =>
+      seq("(", optional(commaSep1($.vim9_parameter)), ")"),
+
+    vim9_function_declaration: ($) =>
+      prec(
+        PREC.CALL,
+        seq(
+          field("name", choice($._ident, $.field_expression)),
+          field("parameters", $.vim9_parameters),
+          optional(seq(":", field("return_type", $.type_identifier)))
+        )
+      ),
+
+    vim9_function_definition: ($) =>
+      seq(
+        maybe_bang($, keyword($, "def")),
+        $.vim9_function_declaration,
+        $._cmd_separator,
+        alias(optional($._separated_statements), $.body),
+        keyword($, "enddef")
+      ),
 
     // :h :_!
     bang: ($) => token.immediate("!"),

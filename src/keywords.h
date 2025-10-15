@@ -94,6 +94,10 @@ typedef enum {
   VIEW = 92,
   EVAL = 93,
   SUBSTITUTE = 94,
+  VIM9SCRIPT = 95,
+  DEF = 96,
+  ENDDEF = 97,
+  VAR = 98,
   UNKNOWN_COMMAND
 } kwid;
 
@@ -571,6 +575,26 @@ keyword keywords[] = {
   [SUBSTITUTE] = {
     .mandat = "s",
     .opt = "ubstitute",
+    .ignore_comments_after = false
+  },
+  [VIM9SCRIPT] = {
+    .mandat = "vim9s",
+    .opt = "cript",
+    .ignore_comments_after = false
+  },
+  [DEF] = {
+    .mandat = "def",
+    .opt = "",
+    .ignore_comments_after = false
+  },
+  [ENDDEF] = {
+    .mandat = "endd",
+    .opt = "ef",
+    .ignore_comments_after = false
+  },
+  [VAR] = {
+    .mandat = "var",
+    .opt = "",
     .ignore_comments_after = false
   },
 };

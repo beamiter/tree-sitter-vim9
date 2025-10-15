@@ -256,11 +256,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -622,11 +634,23 @@
             "named": true
           },
           {
+            "type": "var_statement",
+            "named": true
+          },
+          {
             "type": "vertical_statement",
             "named": true
           },
           {
             "type": "view_statement",
+            "named": true
+          },
+          {
+            "type": "vim9_function_definition",
+            "named": true
+          },
+          {
+            "type": "vim9script_statement",
             "named": true
           },
           {
@@ -1188,11 +1212,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -1567,6 +1603,10 @@
           "named": true
         },
         {
+          "type": "hash_comment",
+          "named": true
+        },
+        {
           "type": "highlight_statement",
           "named": true
         },
@@ -1691,11 +1731,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -1970,11 +2022,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -2243,6 +2307,10 @@
         },
         {
           "type": "comment",
+          "named": true
+        },
+        {
+          "type": "hash_comment",
           "named": true
         },
         {
@@ -3626,6 +3694,10 @@
         {
           "type": "comment",
           "named": true
+        },
+        {
+          "type": "hash_comment",
+          "named": true
         }
       ]
     }
@@ -4263,6 +4335,10 @@
         {
           "type": "comment",
           "named": true
+        },
+        {
+          "type": "hash_comment",
+          "named": true
         }
       ]
     }
@@ -4327,6 +4403,10 @@
         },
         {
           "type": "function_declaration",
+          "named": true
+        },
+        {
+          "type": "hash_comment",
           "named": true
         }
       ]
@@ -4608,11 +4688,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -5002,6 +5094,10 @@
         },
         {
           "type": "elseif_statement",
+          "named": true
+        },
+        {
+          "type": "hash_comment",
           "named": true
         }
       ]
@@ -6044,11 +6140,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -7258,6 +7366,10 @@
           "named": true
         },
         {
+          "type": "hash_comment",
+          "named": true
+        },
+        {
           "type": "highlight_statement",
           "named": true
         },
@@ -7382,11 +7494,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -7943,11 +8067,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -9348,11 +9484,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -9392,6 +9540,25 @@
         },
         {
           "type": "finally_statement",
+          "named": true
+        },
+        {
+          "type": "hash_comment",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "type_identifier",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "type_identifier",
           "named": true
         }
       ]
@@ -9668,6 +9835,153 @@
     }
   },
   {
+    "type": "var_declarator",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "list_assignment",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_identifier",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "argument",
+            "named": true
+          },
+          {
+            "type": "binary_operation",
+            "named": true
+          },
+          {
+            "type": "call_expression",
+            "named": true
+          },
+          {
+            "type": "dictionnary",
+            "named": true
+          },
+          {
+            "type": "env_variable",
+            "named": true
+          },
+          {
+            "type": "field_expression",
+            "named": true
+          },
+          {
+            "type": "float_literal",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "index_expression",
+            "named": true
+          },
+          {
+            "type": "integer_literal",
+            "named": true
+          },
+          {
+            "type": "lambda_expression",
+            "named": true
+          },
+          {
+            "type": "list",
+            "named": true
+          },
+          {
+            "type": "literal_dictionary",
+            "named": true
+          },
+          {
+            "type": "method_expression",
+            "named": true
+          },
+          {
+            "type": "option",
+            "named": true
+          },
+          {
+            "type": "register",
+            "named": true
+          },
+          {
+            "type": "scope_dict",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          },
+          {
+            "type": "slice_expression",
+            "named": true
+          },
+          {
+            "type": "string_literal",
+            "named": true
+          },
+          {
+            "type": "ternary_expression",
+            "named": true
+          },
+          {
+            "type": "unary_operation",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "var_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "var_declarator",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "vertical_statement",
     "named": true,
     "fields": {},
@@ -9924,11 +10238,23 @@
           "named": true
         },
         {
+          "type": "var_statement",
+          "named": true
+        },
+        {
           "type": "vertical_statement",
           "named": true
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_function_definition",
+          "named": true
+        },
+        {
+          "type": "vim9script_statement",
           "named": true
         },
         {
@@ -9972,6 +10298,233 @@
         }
       ]
     }
+  },
+  {
+    "type": "vim9_function_declaration",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "argument",
+            "named": true
+          },
+          {
+            "type": "field_expression",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          }
+        ]
+      },
+      "parameters": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "vim9_parameters",
+            "named": true
+          }
+        ]
+      },
+      "return_type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_identifier",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "vim9_function_definition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bang",
+          "named": true
+        },
+        {
+          "type": "body",
+          "named": true
+        },
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "hash_comment",
+          "named": true
+        },
+        {
+          "type": "vim9_function_declaration",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "vim9_parameter",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "type_identifier",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "(",
+            "named": false
+          },
+          {
+            "type": ")",
+            "named": false
+          },
+          {
+            "type": "argument",
+            "named": true
+          },
+          {
+            "type": "binary_operation",
+            "named": true
+          },
+          {
+            "type": "call_expression",
+            "named": true
+          },
+          {
+            "type": "dictionnary",
+            "named": true
+          },
+          {
+            "type": "env_variable",
+            "named": true
+          },
+          {
+            "type": "field_expression",
+            "named": true
+          },
+          {
+            "type": "float_literal",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "index_expression",
+            "named": true
+          },
+          {
+            "type": "integer_literal",
+            "named": true
+          },
+          {
+            "type": "lambda_expression",
+            "named": true
+          },
+          {
+            "type": "list",
+            "named": true
+          },
+          {
+            "type": "literal_dictionary",
+            "named": true
+          },
+          {
+            "type": "method_expression",
+            "named": true
+          },
+          {
+            "type": "option",
+            "named": true
+          },
+          {
+            "type": "register",
+            "named": true
+          },
+          {
+            "type": "scope_dict",
+            "named": true
+          },
+          {
+            "type": "scoped_identifier",
+            "named": true
+          },
+          {
+            "type": "slice_expression",
+            "named": true
+          },
+          {
+            "type": "string_literal",
+            "named": true
+          },
+          {
+            "type": "ternary_expression",
+            "named": true
+          },
+          {
+            "type": "unary_operation",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "vim9_parameters",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "vim9_parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "vim9script_statement",
+    "named": true,
+    "fields": {}
   },
   {
     "type": "visual_statement",
@@ -10122,6 +10675,10 @@
         },
         {
           "type": "comment",
+          "named": true
+        },
+        {
+          "type": "hash_comment",
           "named": true
         }
       ]
@@ -10815,6 +11372,10 @@
     "named": false
   },
   {
+    "type": "def",
+    "named": false
+  },
+  {
     "type": "default",
     "named": false
   },
@@ -10892,6 +11453,10 @@
   },
   {
     "type": "end",
+    "named": false
+  },
+  {
+    "type": "enddef",
     "named": false
   },
   {
@@ -10991,6 +11556,10 @@
     "named": true
   },
   {
+    "type": "file",
+    "named": false
+  },
+  {
     "type": "file_format",
     "named": true
   },
@@ -11000,10 +11569,6 @@
   },
   {
     "type": "fileformat",
-    "named": false
-  },
-  {
-    "type": "filetype",
     "named": false
   },
   {
@@ -11085,6 +11650,10 @@
   {
     "type": "guisp",
     "named": false
+  },
+  {
+    "type": "hash_comment",
+    "named": true
   },
   {
     "type": "he",
@@ -11188,11 +11757,11 @@
   },
   {
     "type": "keyword",
-    "named": true
+    "named": false
   },
   {
     "type": "keyword",
-    "named": false
+    "named": true
   },
   {
     "type": "koi8",
@@ -11793,6 +12362,10 @@
   },
   {
     "type": "vim",
+    "named": false
+  },
+  {
+    "type": "vim9script",
     "named": false
   },
   {

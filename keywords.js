@@ -474,6 +474,30 @@ const KEYWORDS = {
     opt: "ubstitute",
     ignore_comments_after: false,
   },
+
+  // -----------------------------
+  // Vim9 新增关键字
+  // -----------------------------
+  VIM9SCRIPT: {
+    mandat: "vim9s",
+    opt: "cript",
+    ignore_comments_after: false,
+  },
+  DEF: {
+    mandat: "def",
+    opt: "",
+    ignore_comments_after: false,
+  },
+  ENDDEF: {
+    mandat: "endd",
+    opt: "ef",
+    ignore_comments_after: false,
+  },
+  VAR: {
+    mandat: "var",
+    opt: "",
+    ignore_comments_after: false,
+  },
 };
 
 function make_keywords($) {
