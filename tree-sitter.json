@@ -1,0 +1,39 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "vim",
+      "camelcase": "Vim",
+      "title": "Vim",
+      "scope": "source.vim",
+      "file-types": [
+        "vim"
+      ],
+      "injection-regex": "^vim$",
+      "class-name": "TreeSitterVim"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "tree-sitter vimscript9 parser",
+    "authors": [
+      {
+        "name": "beamiter",
+        "email": "beamiter@163.com"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/beamiter/tree-sitter-vim9"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true,
+    "zig": false
+  }
+}
