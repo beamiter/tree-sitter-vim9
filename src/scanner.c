@@ -10,7 +10,6 @@
 #define HEREDOC_MARKER_LEN 32
 
 typedef struct {
-  // The EOF markers (but they can be whatever so lex that correctly)
   char separator;
   bool ignore_comments;
   uint8_t marker_len;
@@ -18,9 +17,9 @@ typedef struct {
 } Scanner;
 
 typedef struct {
-  char * mandat;               /// Mandatory part of the command
-  char * opt;                  /// Optional part of the command
-  bool ignore_comments_after;  /// Ignore comments until EOL
+  char * mandat;
+  char * opt;
+  bool ignore_comments_after;
 } keyword;
 
 #include "keywords.h"
@@ -41,8 +40,6 @@ enum TokenType {
   COMMENT,
   LINE_CONTINUATION_COMMENT,
   BANG_FILTER,
-  // Many many many many keywords that are impossible to lex otherwise, see
-  // src/keywords.h
   KEYWORDS_BASE
 };
 
@@ -52,27 +49,18 @@ void *tree_sitter_vim_external_scanner_create() {
   s->marker_len = 0;
   s->ignore_comments = false;
   memset(s->heredoc_marker, '\0', HEREDOC_MARKER_LEN);
-
   return (void *)s;
 }
 
 void tree_sitter_vim_external_scanner_destroy(void *payload) {
   Scanner *s = (Scanner *)payload;
-
   free(s);
 }
-
-/// Serialize / deserialize
-//
-// Memory layout is :
-//
-// [ marker_len, marker ... (marker_len size) ]
 
 #define SC_IGNORE_COMMENTS 0
 #define SC_PAIRED_SEP 1
 #define SC_MARK_LEN 2
 #define SC_MARK 3
-
 
 unsigned int tree_sitter_vim_external_scanner_serialize(void *payload,
                                                         char *buffer) {
@@ -82,7 +70,6 @@ unsigned int tree_sitter_vim_external_scanner_serialize(void *payload,
   buffer[SC_MARK_LEN] = s->marker_len;
 
   strncpy(buffer + SC_MARK, s->heredoc_marker, s->marker_len);
-
   return s->marker_len + SC_MARK;
 }
 
@@ -92,13 +79,11 @@ void tree_sitter_vim_external_scanner_deserialize(void *payload,
   if (length == 0) {
     return;
   }
-
   Scanner *s = (Scanner *)payload;
   s->ignore_comments = buffer[SC_IGNORE_COMMENTS];
   s->separator = buffer[SC_PAIRED_SEP];
   s->marker_len = buffer[SC_MARK_LEN];
 
-  // Sanity check, just to be sure
   assert(s->marker_len + SC_MARK == length);
   assert(s->marker_len < HEREDOC_MARKER_LEN);
 
@@ -116,7 +101,7 @@ static void skip_space_tabs(TSLexer *lexer) {
 }
 
 static bool check_prefix(TSLexer *lexer, char *prefix, unsigned int prefix_len,
-                  enum TokenType token) {
+                         enum TokenType token) {
   for (unsigned int i = 0; i < prefix_len; i++) {
     if (lexer->lookahead == prefix[i]) {
       advance(lexer, false);
@@ -124,7 +109,6 @@ static bool check_prefix(TSLexer *lexer, char *prefix, unsigned int prefix_len,
       return false;
     }
   }
-
   lexer->result_symbol = token;
   return true;
 }
@@ -138,8 +122,6 @@ static bool try_lex_heredoc_marker(Scanner *scanner, TSLexer *lexer)
     return false;
   }
 
-  // We should be at the start of the script marker
-  // Note that :let-heredocs do not allow for spaces in the endmarker
   while ((!IS_SPACE_TABS(lexer->lookahead)) && lexer->lookahead && lexer->lookahead != '\n' && marker_len < HEREDOC_MARKER_LEN) {
     marker[marker_len] = lexer->lookahead;
     marker_len++;
@@ -164,7 +146,6 @@ static bool is_valid_string_delim(char c) {
 static bool lex_literal_string(TSLexer *lexer) {
   while (true) {
     if(lexer->lookahead == '\'') {
-      // Maybe end of string, but not sure, it could be double quote
       advance(lexer, false);
       if (lexer->lookahead == '\'') {
         advance(lexer, false);
@@ -174,12 +155,10 @@ static bool lex_literal_string(TSLexer *lexer) {
         return true;
       }
     } else if (lexer->lookahead == '\n') {
-      // Not sure at this point, look after that if there's not a \\ character
       lexer->mark_end(lexer);
       advance(lexer, true);
       skip_space_tabs(lexer);
       if (lexer->lookahead != '\\') {
-        // Was an invalid end...
         return false;
       }
     } else if (lexer->lookahead == '\0') {
@@ -190,7 +169,6 @@ static bool lex_literal_string(TSLexer *lexer) {
   }
 }
 
-// FIXME: this does not support comments like `" Hello "mister" how are you ?`
 static bool lex_escapable_string(TSLexer *lexer) {
   while (true) {
     if (lexer->lookahead == '\\') {
@@ -202,12 +180,10 @@ static bool lex_escapable_string(TSLexer *lexer) {
       lexer->result_symbol = STRING;
       return true;
     } else if (lexer->lookahead == '\n') {
-      // Not sure at this point, look after that if there's not a \\ character
       lexer->mark_end(lexer);
       advance(lexer, false);
       skip_space_tabs(lexer);
       if (lexer->lookahead != '\\') {
-        // Was a comment...
         lexer->mark_end(lexer);
         lexer->result_symbol = COMMENT;
         return true;
@@ -245,7 +221,6 @@ static bool try_lex_keyword(char *possible, keyword keyword) {
     return false;
   }
 
-  // Try lexing mandatory part
   size_t i;
   for (i = 0; keyword.mandat[i] && possible[i]; i++) {
     if (possible[i] != keyword.mandat[i]) {
@@ -253,12 +228,10 @@ static bool try_lex_keyword(char *possible, keyword keyword) {
     }
   }
 
-  // The mandatory part is not complete
   if (keyword.mandat[i] && !possible[i])
     return false;
 
   size_t mandat_len = i;
-  // Now try lexing optional part
   for (size_t i = 0; keyword.opt[i] && possible[mandat_len + i]; i++) {
     if (possible[mandat_len + i] != keyword.opt[i]) {
       return false;
@@ -275,7 +248,6 @@ static bool scope_correct(TSLexer *lexer) {
       return true;
     }
   }
-
   return false;
 }
 
@@ -286,7 +258,7 @@ static bool lex_scope(TSLexer *lexer) {
 
   if (lexer->lookahead == '<') {
     advance(lexer, false);
-    const char sid[4 + 1] = "SID>";
+    const char sid[5] = "SID>";
     for (size_t i = 0; sid[i] && lexer->lookahead; i++) {
       if (lexer->lookahead != sid[i]) {
         return false;
@@ -323,7 +295,6 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
     return false;
   }
 
-  // Not sure about the punctuation here...
   if (valid_symbols[SEP_FIRST] && iswpunct(lexer->lookahead)) {
     s->separator = lexer->lookahead;
     advance(lexer, false);
@@ -331,8 +302,6 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
     lexer->result_symbol = SEP_FIRST;
     return true;
   } else if (valid_symbols[SEP] && s->separator == lexer->lookahead) {
-    // No need to check for s->separator == 0 above because we know
-    // lexer->lookahead is != 0
     advance(lexer, false);
     s->ignore_comments = false;
     lexer->result_symbol = SEP;
@@ -346,36 +315,23 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
     return true;
   }
 
-  // options can be inverted by prepending a 'no' or 'inv'
   if (valid_symbols[NO] && lexer->lookahead == 'n') {
     return check_prefix(lexer, "no", 2, NO);
   } else if (valid_symbols[INV] && lexer->lookahead == 'i') {
     return check_prefix(lexer, "inv", 3, INV);
   }
 
-  // cmd separator and | this is not trivial at all because of how line
-  // continuations are handled after encoutering an EOL :
-  //  - Next line starts by a `\\` ?
-  //    - Yes : is next character `/` or `?` ?
-  //      - Yes : Next line is another command (preceded by a range)
-  //      - No : This is a line continuation
-  //    - No : Next line is another command.
-  //
-  // This ambiguity forces us to use the mark_end function and lookahead more
-  // than just past the final newline and indentationg character.
   if (lexer->lookahead == '\n') {
     advance(lexer, false);
     lexer->mark_end(lexer);
     skip_space_tabs(lexer);
 
     if (lexer->lookahead == '\\') {
-      // You think this is a line continuation ? It might not
       advance(lexer, false);
 
       if (lexer->lookahead == '/'
           || lexer->lookahead == '?'
           || lexer->lookahead == '&') {
-        // Actually this might be a range before a command
         if (valid_symbols[CMD_SEPARATOR]) {
           lexer->result_symbol = CMD_SEPARATOR;
           s->ignore_comments = false;
@@ -406,13 +362,13 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
   if (valid_symbols[CMD_SEPARATOR] && lexer->lookahead == '|') {
     advance(lexer, false);
     if (lexer->lookahead == '|') {
-      // This is an or expression
       return false;
     }
     lexer->result_symbol = CMD_SEPARATOR;
     return true;
   }
 
+  // 作用域优先
   if (scope_correct(lexer) && (valid_symbols[SCOPE_DICT] || valid_symbols[SCOPE])) {
     if (lex_scope(lexer)) {
       return true;
@@ -437,21 +393,17 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
       return false;
     }
 
-    // Ensure there aren't any remaining characters in the line
     if (lexer->lookahead != '\0' && lexer->lookahead != '\n') {
       return false;
     }
 
-    // Found the end marker
     s->marker_len = 0;
     memset(s->heredoc_marker, '\0', HEREDOC_MARKER_LEN);
-
     return true;
   }
 
   if (valid_symbols[COMMENT] && !valid_symbols[STRING]
       && lexer->lookahead == '"' && !s->ignore_comments) {
-    // This con only be a comment
     do {
       advance(lexer, false);
     } while (lexer->lookahead != '\n' && lexer->lookahead != '\0');
@@ -462,12 +414,29 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
     return lex_string(lexer);
   }
 
-  // Other keywords
+  // 关键字（带缩写），避免把单字母后跟 ":" 的作用域前缀误判为关键字
   if (iswlower(lexer->lookahead)) {
 #define KEYWORD_SIZE 30
     char keyword[KEYWORD_SIZE + 1] = { lexer->lookahead, 0 };
 
-    advance(lexer, false);
+    // 如果下一个字符是 ':'，把它视为作用域前缀而不是关键字
+    // 为了不破坏后续解析，这里直接消费 ':' 并返回 SCOPE
+    if (lexer->lookahead && (lexer->lookahead == 'g' || lexer->lookahead == 'b' ||
+                             lexer->lookahead == 'l' || lexer->lookahead == 't' ||
+                             lexer->lookahead == 'w' || lexer->lookahead == 's' ||
+                             lexer->lookahead == 'v')) {
+      // 先不消费字母，看看下一个是不是 ':'
+      // 我们必须消费当前字母才能看到下一个字符
+      advance(lexer, false);
+      if (lexer->lookahead == ':') {
+        advance(lexer, false);
+        lexer->result_symbol = SCOPE;
+        return true;
+      }
+      // 否则继续关键字路径，keyword[0] 已是首字母
+    } else {
+      advance(lexer, false);
+    }
 
     size_t i = 1;
     for (; i < KEYWORD_SIZE && iswalpha(lexer->lookahead); i++) {
@@ -481,7 +450,6 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
 
     keyword[i] = '\0';
 
-    // Now really try to find the keyword
     for (kwid t = FUNCTION; t < UNKNOWN_COMMAND; t++) {
       if (valid_symbols[t + KEYWORDS_BASE] && try_lex_keyword(keyword, keywords[t])) {
         lexer->result_symbol = t + KEYWORDS_BASE;
@@ -490,7 +458,6 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
       }
     }
 
-    // This is quite possibly a keyword, we just don't know which one yet
     if (valid_symbols[UNKNOWN_COMMAND + KEYWORDS_BASE]) {
       lexer->result_symbol = UNKNOWN_COMMAND + KEYWORDS_BASE;
       return true;
@@ -500,5 +467,3 @@ bool tree_sitter_vim_external_scanner_scan(void *payload, TSLexer *lexer,
 
   return false;
 }
-
-// vim: tabstop=2

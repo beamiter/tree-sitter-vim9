@@ -90,15 +90,15 @@ const ENCODING = [
 ];
 
 const PREC = {
-  TERNARY: 1, //=> expr ? expr : expr
-  OR: 2, //=> or
-  AND: 3, //=> and
-  COMPARE: 4, //=> < <= == ~= >= > and all
-  PLUS: 5, //=> + -
-  CONCAT: 5, //=> .. .
-  MULTI: 6, //=> * / %
-  UNARY: 7, //=> ! - +
-  CALL: 8, //expr[n] expr[n:m] expr.name expr(...)
+  TERNARY: 1,
+  OR: 2,
+  AND: 3,
+  COMPARE: 4,
+  PLUS: 5,
+  CONCAT: 5,
+  MULTI: 6,
+  UNARY: 7,
+  CALL: 8,
 };
 
 module.exports = grammar({
@@ -133,14 +133,19 @@ module.exports = grammar({
       $._bang_filter,
     ].concat(require("./keywords").keywords($)),
 
-  extras: ($) => [$._line_continuation, $.line_continuation_comment, /[\t ]/],
+  extras: ($) => [
+    $._line_continuation,
+    $.line_continuation_comment,
+    /[\t ]/,
+    $.hash_comment, // Vim9 的 # 注释
+  ],
 
   rules: {
     script_file: ($) => optional($._separated_statements),
 
     _cmd_separator: ($) => choice($._newline_or_pipe, $.comment, $.hash_comment),
 
-    // Vim9: 行内哈希注释，且不与 "#{...}" 冲突（首字符不能是 '{'）
+    // Vim9: 行内哈希注释，避免与 "#{...}" 冲突（不使用前瞻）
     hash_comment: ($) => token(seq("#", /[^\{\n]/, repeat(/[^\n]/))),
 
     _separated_statements: ($) =>
@@ -154,6 +159,7 @@ module.exports = grammar({
           $.vim9_function_definition,
           $.function_definition,
           $.var_statement,
+          $.vim9_assignment_statement, // Vim9 裸赋值（如 g:xxx = expr）
           $.let_statement,
           $.unlet_statement,
           $.const_statement,
@@ -225,6 +231,16 @@ module.exports = grammar({
 
     // Vim9 顶层指令
     vim9script_statement: ($) => keyword($, "vim9script"),
+
+    // Vim9 裸赋值语句：如 g:foo = expr
+    vim9_assignment_statement: ($) =>
+      seq(
+        $.scoped_identifier,
+        choice(
+          seq($._let_operator, $._expression),
+          alias($._let_heredoc, $.heredoc)
+        )
+      ),
 
     unknown_builtin_statement: ($) =>
       seq(
@@ -417,7 +433,6 @@ module.exports = grammar({
 
     throw_statement: ($) => command($, "throw", $._expression),
 
-    // :h filter
     _bang_filter_bangs: ($) => seq($.bang, optional($.bang)),
     _bang_filter_command_argument: ($) =>
       choice(
@@ -440,7 +455,6 @@ module.exports = grammar({
         alias($._bang_filter_command, $.command)
       ),
 
-    // TODO(vigoux): maybe we should find some names here
     scoped_identifier: ($) => seq($.scope, $.identifier),
 
     argument: ($) =>
@@ -531,7 +545,7 @@ module.exports = grammar({
         choice($._const_assignment, repeat($._assignment_variable))
       ),
 
-    // Vim9 var 声明
+    // Vim9 类型与 var 声明
     type_identifier: ($) =>
       seq(
         field("name", token(/[A-Za-z_]\w*/)),
@@ -549,7 +563,6 @@ module.exports = grammar({
     var_statement: ($) =>
       seq(
         keyword($, "var"),
-        // 支持逗号或空白分隔的多个声明
         seq(
           $.var_declarator,
           repeat(seq(choice(",", /[ \t]+/), $.var_declarator))
@@ -567,7 +580,6 @@ module.exports = grammar({
         alias($._heredoc_end, $.endmarker)
       ),
 
-    // :h :let-heredoc
     _let_heredoc_parameter: ($) => choice("trim", "eval"),
 
     option_name: ($) => choice(/[a-z]+/, seq("t_", /[a-zA-Z0-9]+/)),
@@ -647,7 +659,6 @@ module.exports = grammar({
 
     command_argument: ($) => choice($.string_literal, /\S+/),
 
-    // 传统 function ... endfunction
     function_definition: ($) =>
       seq(
         maybe_bang($, keyword($, "function")),
@@ -715,7 +726,6 @@ module.exports = grammar({
         keyword($, "enddef")
       ),
 
-    // :h :_!
     bang: ($) => token.immediate("!"),
 
     at: ($) => "@",
@@ -723,8 +733,6 @@ module.exports = grammar({
     spread: ($) => "...",
 
     _printable: ($) => /[^\t\n\v\f\r]/,
-
-    // :h 10.3
 
     mark: ($) => /'./,
 
@@ -776,7 +784,6 @@ module.exports = grammar({
     last_line: ($) => "$",
     previous_pattern: ($) => choice("\\/", "\\?", "\\&"),
 
-    // :h :@
     register_statement: ($) => $.register,
 
     map_statement: ($) =>
@@ -826,56 +833,55 @@ module.exports = grammar({
         )
       ),
 
-    // All keycodes should be match case insensitively (this makes it awful to read)
     _keycode_modifier: ($) => token.immediate(/([SsCcMmAaDd]|[Aa][lL][tT])-/),
     _keycode_in: ($) =>
       choice(
         ...[
-          /[Nn][Uu][Ll]/, // Nul
-          /[Bb][Ss]/, // BS
-          /[Tt][aA][bB]/, // Tab
-          /[Nn][Ll]/, // NL
-          /[Cc][Rr]/, // CR
-          /[Rr][eE][tT][uU][rR][nN]/, // Return
-          /[kK]?[Ee][nN][tT][eE][rR]/, // [k]Enter
-          /[Ee][sS][cC]/, // Esc
-          /[Ss][pP][aA][cC][eE]/, // Space
-          /[lL][tT]/, // lt
-          /[Bb][sS][lL][aA][sS][hH]/, // Bslash
-          /[Bb][aA][rR]/, // Bar
-          /[kK]?[Dd][eE][lL]/, // [k]Del
-          /[xX]?[Cc][Ss][Ii]/, // [x]CSI
-          /[Ee][Oo][Ll]/, // EOL
-          /[Ii][gG][nN][oO][rR][eE]/, // Ignore
-          /[Nn][Oo][Pp]/, // Nop
-          /([kK]|([SsCc]-))?[Uu][pP]/, // [k|S-|C-]Up
-          /([kK]|([SsCc]-))?[Dd][oO][wW][nN]/, // [k|S-|C-]Down
-          /([kK]|([SsCc]-))?[Ll][eE][fF][tT]/, // [k|S-|C-]Left
-          /([kK]|([SsCc]-))?[Rr][iI][gG][hH][tT]/, // [k|S-|C-]Right
-          /([SsCc]-)?[Ll][eE][fF][tT][Mm][oO][uU][sS][eE]/, // <S|C>-LeftMouse
-          /([SsCc]-)?[Rr][iI][gG][hH][tT][Mm][oO][uU][sS][eE]/, // <S|C>-RightMouse
-          /([Ss]-)?[Ff][0-9]{1,2}/, // [S-]F<1-12>
-          /[Hh][eE][lL][pP]/, // Help
-          /[Uu][nN][dD][oO]/, // Undo
-          /[Ii][nN][sS][eE][rR][tT]/, // Insert
-          /[kK]?[Hh][oO][mM][eE]/, // [k]Home
-          /[kK]?[Ee][nN][dD]/, // [k]End
-          /[kK]?[Pp][aA][gG][eE][Uu][pP]/, // [k]PageUp
-          /[kK]?[Pp][aA][gG][eE][Dd][oO][wW][nN]/, // [k]PageDown
-          /[kK][Pp][lL][uU][sS]/, // kPlus
-          /[kK][Mm][iI][nN][uU][sS]/, // kMinus
-          /[kK][Mm][uU][lL][tT][iI][pP][lL][yY]/, // kMultiply
-          /[kK][Dd][iI][vV][iI][dD][eE]/, // kDivide
-          /[kK][Pp][oO][iI][nN][tT]/, // kPoint
-          /[kK][Cc][oO][mM][mM][aA]/, // kComma
-          /[kK][Ee][qQ][uU][aA][lL]/, // kEqual
-          /[kK][0-9]/, // k<0-9>
-          /([Ll][oO][cC][aA][lL])?[Ll][eE][aA][dD][eE][rR]/, // [Local]Leader
-          /[Ss][Ii][Dd]/, // SID
-          /[Pp][lL][uU][gG]/, // Plug
-          /([Ss]-)?[Cc][hH][aA][rR]-(0[0-7]+|0[xX][0-9a-fA-F]+|[0-9]+)+/, // [S-]Char-...
+          /[Nn][Uu][Ll]/,
+          /[Bb][Ss]/,
+          /[Tt][aA][bB]/,
+          /[Nn][Ll]/,
+          /[Cc][Rr]/,
+          /[Rr][eE][tT][uU][rR][nN]/,
+          /[kK]?[Ee][nN][tT][eE][rR]/,
+          /[Ee][sS][cC]/,
+          /[Ss][pP][aA][cC][eE]/,
+          /[lL][tT]/,
+          /[Bb][sS][lL][aA][sS][hH]/,
+          /[Bb][aA][rR]/,
+          /[kK]?[Dd][eE][lL]/,
+          /[xX]?[Cc][Ss][Ii]/,
+          /[Ee][Oo][Ll]/,
+          /[Ii][gG][nN][oO][rR][eE]/,
+          /[Nn][Oo][Pp]/,
+          /([kK]|([SsCc]-))?[Uu][pP]/,
+          /([kK]|([SsCc]-))?[Dd][oO][wW][nN]/,
+          /([kK]|([SsCc]-))?[Ll][eE][fF][tT]/,
+          /([kK]|([SsCc]-))?[Rr][iI][gG][hH][tT]/,
+          /([SsCc]-)?[Ll][eE][fF][tT][Mm][oO][uU][sS][eE]/,
+          /([SsCc]-)?[Rr][iI][gG][hH][tT][Mm][oO][uU][sS][eE]/,
+          /([Ss]-)?[Ff][0-9]{1,2}/,
+          /[Hh][eE][lL][pP]/,
+          /[Uu][nN][dD][oO]/,
+          /[Ii][nN][sS][eE][rR][tT]/,
+          /[kK]?[Hh][oO][mM][eE]/,
+          /[kK]?[Ee][nN][dD]/,
+          /[kK]?[Pp][aA][gG][eE][Uu][pP]/,
+          /[kK]?[Pp][aA][gG][eE][Dd][oO][wW][nN]/,
+          /[kK][Pp][lL][uU][sS]/,
+          /[kK][Mm][iI][nN][uU][sS]/,
+          /[kK][Mm][uU][lL][tT][iI][pP][lL][yY]/,
+          /[kK][Dd][iI][vV][iI][dD][eE]/,
+          /[kK][Pp][oO][iI][nN][tT]/,
+          /[kK][Cc][oO][mM][mM][aA]/,
+          /[kK][Ee][qQ][uU][aA][lL]/,
+          /[kK][0-9]/,
+          /([Ll][oO][cC][aA][lL])?[Ll][eE][aA][dD][eE][rR]/,
+          /[Ss][Ii][Dd]/,
+          /[Pp][lL][uU][gG]/,
+          /([Ss]-)?[Cc][hH][aA][rR]-(0[0-7]+|0[xX][0-9a-fA-F]+|[0-9]+)+/,
         ].map(token.immediate),
-        seq($._keycode_modifier, choice(token.immediate(/\S/), $._keycode_in)) // (<S|C|M|A|D|Alt>-)+...
+        seq($._keycode_modifier, choice(token.immediate(/\S/), $._keycode_in))
       ),
     _immediate_keycode: ($) =>
       seq(token.immediate("<"), $._keycode_in, token.immediate(">")),
@@ -885,13 +891,10 @@ module.exports = grammar({
     _map_rhs_statement: ($) =>
       seq(
         alias(/<[Cc][Mm][Dd]>/, $.keycode),
-        // :h map_bar
         sep1($._statement, choice("\\|", alias(/<[Bb][Aa][Rr]>/, $.keycode))),
         alias(/<[Cc][Rr]>/, $.keycode)
       ),
     _map_rhs: ($) => choice(keys($, /[^\s|]/, /[^|\n]/), $._map_rhs_statement),
-
-    // :h sign
 
     _sign_name: ($) => choice($.integer_literal, $.identifier),
 
@@ -917,7 +920,6 @@ module.exports = grammar({
 
     _sign_list: ($) => sub_cmd("list", optional(field("name", $._sign_name))),
 
-    // :h sign-place
     _sign_place_place_argument: ($) =>
       choice(
         key_val_arg("line", $.integer_literal),
@@ -932,7 +934,6 @@ module.exports = grammar({
         field("id", $.integer_literal),
         repeat1(alias($._sign_place_place_argument, $.sign_argument))
       ),
-    // :h sign-place-list
     _sign_place_list_argument: ($) =>
       choice(
         key_val_arg("file", $.filename),
@@ -1000,7 +1001,6 @@ module.exports = grammar({
         )
       ),
 
-    // :h variable
     _variable: ($) =>
       prec.left(
         0,
@@ -1020,7 +1020,6 @@ module.exports = grammar({
         )
       ),
 
-    //:h expression-syntax
     _expression: ($) =>
       choice(
         $._variable,
@@ -1047,7 +1046,6 @@ module.exports = grammar({
         )
       ),
 
-    // Shamelessly stolen from tree-sitter-lua
     match_case: ($) => choice("#", "?"),
 
     binary_operation: ($) =>
@@ -1084,7 +1082,6 @@ module.exports = grammar({
     unary_operation: ($) =>
       prec.left(PREC.UNARY, seq(choice("-", "!", "+"), $._expression)),
 
-    // :h floating-point-format
     float_literal: ($) => {
       const digits = /[0-9]+/;
       const sign = /[+-]?/;
@@ -1108,7 +1105,6 @@ module.exports = grammar({
       ),
 
     list: ($) => seq("[", commaSep($._expression), optional(","), "]"),
-    // Trailing commas are not allowed in assignments, but `; <ident>` are
     list_assignment: ($) =>
       seq("[", commaSep($._expression), optional(seq(";", $._expression)), "]"),
 
@@ -1181,18 +1177,13 @@ module.exports = grammar({
         )
       ),
 
-    // Use default :h isfname
     filename: ($) =>
       seq(
-        // First character of a filename is not immediate
         choice(
           /[A-Za-z0-9]/,
           /[/._+,#$%~=-]/,
-          // Include windows characters
           /[\\{}\[\]:@!]/,
-          // Allow wildcard
           /[*]/,
-          // Escaped character
           seq("\\", /./)
         ),
         repeat(
@@ -1200,18 +1191,14 @@ module.exports = grammar({
             ...[
               /[A-Za-z0-9]/,
               /[/._+,#$%~=-]/,
-              // Include windows characters
               /[\\{}\[\]:@!]/,
-              // Allow wildcard
               /[*]/,
-              // Escaped character
               seq("\\", /./),
             ].map(token.immediate)
           )
         )
       ),
 
-    // :h pattern
     pattern_multi: ($) =>
       choice("*", /\\[+=?]/, /\\@[!>=]|<[=!]/, /\\\{-?[0-9]*,?[0-9]*}/),
 
@@ -1222,14 +1209,14 @@ module.exports = grammar({
             "[",
             repeat(
               choice(
-                seq("\\", /./), // escaped character
-                /[^\]\n\\]/ // any character besides ']', '\' or '\n'
+                seq("\\", /./),
+                /[^\]\n\\]/
               )
             ),
             "]"
-          ), // square-bracket-delimited character class
-          seq("\\", /./), // escaped character
-          /[^\\\[\n]/ // any character besides '[', '\' or '\n'
+          ),
+          seq("\\", /./),
+          /[^\\\[\n]/
         )
       ),
 
@@ -1253,7 +1240,6 @@ module.exports = grammar({
 
     env_variable: ($) => seq("$", $.identifier),
 
-    // :h registers
     register: ($) => /@["0-9a-zA-Z:.%#=*+_/-@]/,
 
     option: ($) => seq("&", optional($.scope), $.option_name),
@@ -1264,7 +1250,6 @@ module.exports = grammar({
     dictionnary: ($) =>
       seq("{", commaSep($.dictionnary_entry), optional(","), "}"),
 
-    // :h literal-Dict
     _literal_dictionary_entry: ($) =>
       seq(field("key", $.literal_key), ":", field("value", $._expression)),
 
@@ -1273,7 +1258,6 @@ module.exports = grammar({
     literal_dictionary: ($) =>
       seq("#{", commaSep($._literal_dictionary_entry), optional(","), "}"),
 
-    // :h lambda
     lambda_expression: ($) =>
       seq("{", commaSep($.identifier), "->", $._expression, "}"),
     _immediate_lambda_expression: ($) =>
@@ -1285,7 +1269,6 @@ module.exports = grammar({
         "}"
       ),
 
-    // :h ++opt
     _plus_plus_opt_bad: ($) =>
       choice(...[/./, "keep", "drop"].map(token.immediate)),
     plus_plus_opt: ($) =>
@@ -1311,12 +1294,11 @@ module.exports = grammar({
         )
       ),
 
-    // :h +cmd
     _plus_cmd_arg: ($) =>
       repeat1(
         choice(
-          seq(token.immediate("\\"), token.immediate(/./)), // escaped character
-          token.immediate(/[^ \n]/) // any character besides ' ' and newline
+          seq(token.immediate("\\"), token.immediate(/./)),
+          token.immediate(/[^ \n]/)
         )
       ),
     _plus_cmd_number: ($) =>
@@ -1341,9 +1323,7 @@ module.exports = grammar({
 
 function command_modifier($, name, bang) {
   let inner = keyword($, name);
-  if (bang) {
-    inner = maybe_bang($, inner);
-  }
+  if (bang) inner = maybe_bang($, inner);
   return seq(inner, $._statement);
 }
 

@@ -268,6 +268,10 @@
           "named": true
         },
         {
+          "type": "vim9_assignment_statement",
+          "named": true
+        },
+        {
           "type": "vim9_function_definition",
           "named": true
         },
@@ -643,6 +647,10 @@
           },
           {
             "type": "view_statement",
+            "named": true
+          },
+          {
+            "type": "vim9_assignment_statement",
             "named": true
           },
           {
@@ -1224,6 +1232,10 @@
           "named": true
         },
         {
+          "type": "vim9_assignment_statement",
+          "named": true
+        },
+        {
           "type": "vim9_function_definition",
           "named": true
         },
@@ -1743,6 +1755,10 @@
           "named": true
         },
         {
+          "type": "vim9_assignment_statement",
+          "named": true
+        },
+        {
           "type": "vim9_function_definition",
           "named": true
         },
@@ -2031,6 +2047,10 @@
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_assignment_statement",
           "named": true
         },
         {
@@ -4700,6 +4720,10 @@
           "named": true
         },
         {
+          "type": "vim9_assignment_statement",
+          "named": true
+        },
+        {
           "type": "vim9_function_definition",
           "named": true
         },
@@ -6152,6 +6176,10 @@
           "named": true
         },
         {
+          "type": "vim9_assignment_statement",
+          "named": true
+        },
+        {
           "type": "vim9_function_definition",
           "named": true
         },
@@ -7506,6 +7534,10 @@
           "named": true
         },
         {
+          "type": "vim9_assignment_statement",
+          "named": true
+        },
+        {
           "type": "vim9_function_definition",
           "named": true
         },
@@ -8076,6 +8108,10 @@
         },
         {
           "type": "view_statement",
+          "named": true
+        },
+        {
+          "type": "vim9_assignment_statement",
           "named": true
         },
         {
@@ -9496,6 +9532,10 @@
           "named": true
         },
         {
+          "type": "vim9_assignment_statement",
+          "named": true
+        },
+        {
           "type": "vim9_function_definition",
           "named": true
         },
@@ -10250,6 +10290,10 @@
           "named": true
         },
         {
+          "type": "vim9_assignment_statement",
+          "named": true
+        },
+        {
           "type": "vim9_function_definition",
           "named": true
         },
@@ -10294,6 +10338,109 @@
         },
         {
           "type": "plus_plus_opt",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "vim9_assignment_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "argument",
+          "named": true
+        },
+        {
+          "type": "binary_operation",
+          "named": true
+        },
+        {
+          "type": "call_expression",
+          "named": true
+        },
+        {
+          "type": "dictionnary",
+          "named": true
+        },
+        {
+          "type": "env_variable",
+          "named": true
+        },
+        {
+          "type": "field_expression",
+          "named": true
+        },
+        {
+          "type": "float_literal",
+          "named": true
+        },
+        {
+          "type": "heredoc",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "index_expression",
+          "named": true
+        },
+        {
+          "type": "integer_literal",
+          "named": true
+        },
+        {
+          "type": "lambda_expression",
+          "named": true
+        },
+        {
+          "type": "list",
+          "named": true
+        },
+        {
+          "type": "literal_dictionary",
+          "named": true
+        },
+        {
+          "type": "method_expression",
+          "named": true
+        },
+        {
+          "type": "option",
+          "named": true
+        },
+        {
+          "type": "register",
+          "named": true
+        },
+        {
+          "type": "scope_dict",
+          "named": true
+        },
+        {
+          "type": "scoped_identifier",
+          "named": true
+        },
+        {
+          "type": "slice_expression",
+          "named": true
+        },
+        {
+          "type": "string_literal",
+          "named": true
+        },
+        {
+          "type": "ternary_expression",
+          "named": true
+        },
+        {
+          "type": "unary_operation",
           "named": true
         }
       ]
@@ -11549,10 +11696,6 @@
   },
   {
     "type": "file",
-    "named": false
-  },
-  {
-    "type": "file",
     "named": true
   },
   {
@@ -11653,7 +11796,8 @@
   },
   {
     "type": "hash_comment",
-    "named": true
+    "named": true,
+    "extra": true
   },
   {
     "type": "he",
@@ -11757,11 +11901,11 @@
   },
   {
     "type": "keyword",
-    "named": false
+    "named": true
   },
   {
     "type": "keyword",
-    "named": true
+    "named": false
   },
   {
     "type": "koi8",

@@ -110,6 +110,10 @@
             },
             {
               "type": "SYMBOL",
+              "name": "vim9_assignment_statement"
+            },
+            {
+              "type": "SYMBOL",
               "name": "let_statement"
             },
             {
@@ -384,6 +388,42 @@
       },
       "named": false,
       "value": "vim9script"
+    },
+    "vim9_assignment_statement": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "scoped_identifier"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "_let_operator"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "_expression"
+                }
+              ]
+            },
+            {
+              "type": "ALIAS",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_let_heredoc"
+              },
+              "named": true,
+              "value": "heredoc"
+            }
+          ]
+        }
+      ]
     },
     "unknown_builtin_statement": {
       "type": "SEQ",
@@ -14412,6 +14452,10 @@
     {
       "type": "PATTERN",
       "value": "[\\t ]"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "hash_comment"
     }
   ],
   "conflicts": [
