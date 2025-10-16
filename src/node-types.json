@@ -1,5 +1,43 @@
 [
   {
+    "type": "arguments",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expr",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "arrow_function",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "block",
+          "named": true
+        },
+        {
+          "type": "expr",
+          "named": true
+        },
+        {
+          "type": "parameter",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "assignment",
     "named": true,
     "fields": {},
@@ -34,6 +72,61 @@
     }
   },
   {
+    "type": "block",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "assignment",
+          "named": true
+        },
+        {
+          "type": "command",
+          "named": true
+        },
+        {
+          "type": "comment",
+          "named": true
+        },
+        {
+          "type": "const_statement",
+          "named": true
+        },
+        {
+          "type": "def_function",
+          "named": true
+        },
+        {
+          "type": "expr_statement",
+          "named": true
+        },
+        {
+          "type": "for_statement",
+          "named": true
+        },
+        {
+          "type": "if_statement",
+          "named": true
+        },
+        {
+          "type": "let_statement",
+          "named": true
+        },
+        {
+          "type": "newline",
+          "named": true
+        },
+        {
+          "type": "vim9script",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "call_expression",
     "named": true,
     "fields": {},
@@ -42,7 +135,7 @@
       "required": true,
       "types": [
         {
-          "type": "expr",
+          "type": "arguments",
           "named": true
         },
         {
@@ -100,6 +193,29 @@
     "fields": {}
   },
   {
+    "type": "const_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expr",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "def_function",
     "named": true,
     "fields": {},
@@ -117,6 +233,10 @@
         },
         {
           "type": "comment",
+          "named": true
+        },
+        {
+          "type": "const_statement",
           "named": true
         },
         {
@@ -221,6 +341,10 @@
           "named": true
         },
         {
+          "type": "const_statement",
+          "named": true
+        },
+        {
           "type": "def_function",
           "named": true
         },
@@ -272,6 +396,10 @@
           "named": true
         },
         {
+          "type": "const_statement",
+          "named": true
+        },
+        {
           "type": "def_function",
           "named": true
         },
@@ -315,6 +443,10 @@
       "required": true,
       "types": [
         {
+          "type": "arrow_function",
+          "named": true
+        },
+        {
           "type": "binary_expression",
           "named": true
         },
@@ -344,6 +476,10 @@
         },
         {
           "type": "list",
+          "named": true
+        },
+        {
+          "type": "method_call",
           "named": true
         },
         {
@@ -410,6 +546,10 @@
         },
         {
           "type": "comment",
+          "named": true
+        },
+        {
+          "type": "const_statement",
           "named": true
         },
         {
@@ -502,6 +642,10 @@
           "named": true
         },
         {
+          "type": "const_statement",
+          "named": true
+        },
+        {
           "type": "def_function",
           "named": true
         },
@@ -574,6 +718,10 @@
         {
           "type": "identifier",
           "named": true
+        },
+        {
+          "type": "type",
+          "named": true
         }
       ]
     }
@@ -625,6 +773,29 @@
     }
   },
   {
+    "type": "method_call",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "arguments",
+          "named": true
+        },
+        {
+          "type": "expr",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "pair",
     "named": true,
     "fields": {},
@@ -667,11 +838,11 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": true,
+      "multiple": false,
       "required": false,
       "types": [
         {
-          "type": "expr",
+          "type": "arguments",
           "named": true
         }
       ]
@@ -751,6 +922,10 @@
         },
         {
           "type": "comment",
+          "named": true
+        },
+        {
+          "type": "const_statement",
           "named": true
         },
         {
@@ -842,6 +1017,22 @@
     "named": false
   },
   {
+    "type": "!=#",
+    "named": false
+  },
+  {
+    "type": "!=?",
+    "named": false
+  },
+  {
+    "type": "!~",
+    "named": false
+  },
+  {
+    "type": "!~#",
+    "named": false
+  },
+  {
     "type": "#",
     "named": false
   },
@@ -874,6 +1065,10 @@
     "named": false
   },
   {
+    "type": "->",
+    "named": false
+  },
+  {
     "type": "..",
     "named": false
   },
@@ -902,6 +1097,22 @@
     "named": false
   },
   {
+    "type": "==#",
+    "named": false
+  },
+  {
+    "type": "==?",
+    "named": false
+  },
+  {
+    "type": "=>",
+    "named": false
+  },
+  {
+    "type": "=~",
+    "named": false
+  },
+  {
     "type": "=~#",
     "named": false
   },
@@ -926,6 +1137,10 @@
     "named": false
   },
   {
+    "type": "any",
+    "named": false
+  },
+  {
     "type": "bool",
     "named": false
   },
@@ -936,6 +1151,10 @@
   {
     "type": "command_name",
     "named": true
+  },
+  {
+    "type": "const",
+    "named": false
   },
   {
     "type": "def",
@@ -966,12 +1185,16 @@
     "named": false
   },
   {
-    "type": "float",
-    "named": true
+    "type": "export",
+    "named": false
   },
   {
     "type": "float",
     "named": false
+  },
+  {
+    "type": "float",
+    "named": true
   },
   {
     "type": "for",
@@ -1000,11 +1223,11 @@
   },
   {
     "type": "number",
-    "named": false
+    "named": true
   },
   {
     "type": "number",
-    "named": true
+    "named": false
   },
   {
     "type": "option_var",
@@ -1028,11 +1251,11 @@
   },
   {
     "type": "string",
-    "named": false
+    "named": true
   },
   {
     "type": "string",
-    "named": true
+    "named": false
   },
   {
     "type": "var",
