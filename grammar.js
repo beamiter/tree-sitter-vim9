@@ -1,13 +1,19 @@
 // grammar.js
 // Pragmatic Tree-sitter grammar for a Vim9-like .vimrc subset.
+// 增强点：
+// - 行内 | 链式语句
+// - 复合赋值 ..=、+=、-=、*=、/=
+// - for 解构变量 [k, v]
+// - 切片索引 expr[ start? : end? ]（可与索引链式）
+// - 顶层同时支持“结构化语句块”（def/if/for）和“可链语句行”
+// - command 简化为：name + repeat(safe_arg) + optional(raw_text)
 
 module.exports = grammar({
   name: 'vim9',
 
   extras: $ => [
     /[ \t\r\f]/,
-    // 移除 line_continuation 出现在 extras 中，防止误吞任意 '\'
-    // $.line_continuation,
+    // 不把续行放到 extras
   ],
 
   conflicts: $ => [
@@ -21,35 +27,57 @@ module.exports = grammar({
   ],
 
   rules: {
-    // 可选增强：在语法层显式支持续行（反斜杠开头的“附加行”）
-    // 如果暂不需要续行功能，可删除 continued_line 并恢复最初的 source_file。
+    // ========== 行级与顶层组织 ==========
+    // 可链式语句（同一行可用 | 连接多条）
+    chainable_statement: $ => choice(
+      $.comment,
+      $.vim9script,
+      $.command,
+      $.expr_statement,
+      $.assignment,
+      $.augmented_assignment,
+      $.let_statement,
+      $.const_statement
+    ),
+
+    // 用单个 | 分隔
+    statement_chain: $ => seq(
+      $.chainable_statement,
+      repeat(seq('|', $.chainable_statement))
+    ),
+
+    // 结构化语句块（自身处理多行）
+    structured_statement: $ => choice(
+      $.def_function,
+      $.if_statement,
+      $.for_statement
+    ),
+
+    // 顶层：结构化块 或 行（含链式 + 续行）
     source_file: $ => seq(
-      repeat(seq(
-        optional($._statement),
-        // 若有续行，则可以跟若干续行行（每个续行行内自带 newline）
-        repeat($.continued_line),
-        $.newline
+      repeat(choice(
+        $.structured_statement,
+        seq(optional($.statement_chain), repeat($.continued_line), $.newline)
       )),
       optional(seq(
-        optional($._statement),
+        optional($.statement_chain),
         repeat($.continued_line)
       ))
     ),
 
     newline: $ => /\n/,
 
-    // 原 extras 的 line_continuation 删除。这里提供基于语法层的续行行定义：
-    // 规则：行首可有若干空格/Tab，然后一个反斜杠，后面到行尾任何内容，最后必须是换行符。
-    // 说明：这不是 Vim 的全部细节（例如续行与注释/字符串的交互），但能避免误吞。
+    // 续行：行首空白 + \ + 非换行若干 + 换行
     continued_line: $ => seq(/[ \t]*\\[^\n]*/, $.newline),
 
-    // Prefer reserved constructs first, then fallback to generic command.
+    // 备用（块内也会用到的“单条语句”入口）
     _statement: $ => choice(
       $.comment,
       $.vim9script,
       $.const_statement,
       $.let_statement,
       $.assignment,
+      $.augmented_assignment,
       $.def_function,
       $.if_statement,
       $.for_statement,
@@ -57,13 +85,28 @@ module.exports = grammar({
       $.command
     ),
 
-    // vim9script directive
+    // ========== 基础元素 ==========
     vim9script: $ => 'vim9script',
 
-    // Comment lines
     comment: $ => seq('#', /[^\n]*/),
 
-    // 安全参数项
+    // 特殊键 <CR> 等
+    special_key: $ => token(seq('<', /[^>\n]+/, '>')),
+
+    // 不吞掉 '|' 或 '\n'
+    raw_text: $ => token(prec(-1, /[^|\n]+/)),
+
+    // ========== 命令（Ex） ==========
+    // 统一简化：name + 0+ safe_arg + 可选 raw_text
+    command: $ => seq(
+      $.command_name,
+      repeat($.safe_arg),
+      optional($.raw_text)
+    ),
+
+    command_name: $ => token(prec(1, /[A-Za-z][A-Za-z0-9_-]+!?/)),
+
+    // 安全参数：避免把 '|' 当作参数
     safe_arg: $ => choice(
       $.string,
       $.number,
@@ -72,28 +115,12 @@ module.exports = grammar({
       $.option_var,
       $.identifier,
       $.special_key,
-      $.pipe,
       $.list,
       $.dict,
       $.call_expression
     ),
 
-    // Generic Ex command
-    command: $ => choice(
-      prec(2, seq($.command_name, $.command_args)),
-      prec(1, seq($.command_name)),
-      prec(0, seq($.command_name, repeat($.safe_arg), $.raw_text))
-    ),
-
-    command_name: $ => token(prec(1, /[A-Za-z][A-Za-z0-9_-]+!?/)),
-    command_args: $ => repeat1($.safe_arg),
-
-    special_key: $ => token(seq('<', /[^>\n]+/, '>')),
-    pipe: $ => token('|'),
-
-    raw_text: $ => token(prec(-1, /[^\n]+/)),
-
-    // const/var
+    // ========== 变量与赋值 ==========
     const_statement: $ => prec(2, seq(
       'const',
       $.identifier,
@@ -110,7 +137,15 @@ module.exports = grammar({
       $.expr
     )),
 
+    // 普通赋值
     assignment: $ => prec(2, seq($.lvalue, '=', $.expr)),
+
+    // 复合赋值
+    augmented_assignment: $ => prec(2, seq(
+      $.lvalue,
+      choice('..=', '+=', '-=', '*=', '/='),
+      $.expr
+    )),
 
     lvalue: $ => choice(
       $.scope_var,
@@ -122,16 +157,24 @@ module.exports = grammar({
     scope_var: $ => token(seq(/[gbwtlvs]:/, /[A-Za-z_][A-Za-z0-9_]*/)),
     option_var: $ => token(seq('&', /[A-Za-z0-9_]+/)),
 
-    index_expression: $ => prec.left(10, seq($.expr, '[', $.expr, ']')),
+    // ========== 表达式 ==========
+    // 索引/切片，可链式：a[1][ : 3]
+    index_expression: $ => prec.left(10, seq(
+      $.expr,
+      repeat1(choice(
+        // 索引
+        seq('[', $.expr, ']'),
+        // 切片 [start? : end?]
+        seq('[', optional($.expr), ':', optional($.expr), ']')
+      ))
+    )),
 
-    // 表达式语句：加入 method_call（修复）
     expr_statement: $ => choice(
       $.call_expression,
       $.method_call
     ),
 
     _name: $ => token(/[A-Za-z_][A-Za-z0-9_]*(?:#[A-Za-z_][A-Za-z0-9_]*)*/),
-
     identifier: $ => alias($._name, $.identifier),
     function_name: $ => alias($._name, $.function_name),
 
@@ -152,11 +195,12 @@ module.exports = grammar({
       choice($.expr, $.block)
     )),
 
+    // 代码块：每行允许链式语句
     block: $ => seq(
       '{',
       repeat(choice(
         $.newline,
-        seq(optional($._statement), $.newline)
+        seq(optional($.statement_chain), $.newline)
       )),
       '}'
     ),
@@ -169,7 +213,7 @@ module.exports = grammar({
       optional(seq($.parameter, repeat(seq(',', $.parameter)))),
       ')',
       optional(seq(':', $.type)),
-      repeat(seq(optional($._statement), $.newline)),
+      repeat(seq(optional($.statement_chain), $.newline)),
       'enddef'
     ),
 
@@ -202,7 +246,6 @@ module.exports = grammar({
       $.ternary_expression
     ),
 
-    // 改为只允许单一表达式，降低冲突（修复）
     parenthesized_expression: $ => seq(
       '(',
       optional($.expr),
@@ -299,10 +342,11 @@ module.exports = grammar({
 
     ternary_expression: $ => prec.right(0, seq($.expr, '?', $.expr, ':', $.expr)),
 
+    // ========== 控制结构 ==========
     if_statement: $ => seq(
       'if',
       $.expr,
-      repeat(seq(optional($._statement), $.newline)),
+      repeat(seq(optional($.statement_chain), $.newline)),
       repeat($.elseif_clause),
       optional($.else_clause),
       'endif'
@@ -311,20 +355,28 @@ module.exports = grammar({
     elseif_clause: $ => seq(
       'elseif',
       $.expr,
-      repeat(seq(optional($._statement), $.newline))
+      repeat(seq(optional($.statement_chain), $.newline))
     ),
 
     else_clause: $ => seq(
       'else',
-      repeat(seq(optional($._statement), $.newline))
+      repeat(seq(optional($.statement_chain), $.newline))
+    ),
+
+    // for 支持解构变量 [k, v]
+    list_pattern: $ => seq(
+      '[',
+      $.identifier,
+      repeat(seq(',', $.identifier)),
+      ']'
     ),
 
     for_statement: $ => seq(
       'for',
-      $.identifier,
+      choice($.identifier, $.list_pattern),
       'in',
       $.expr,
-      repeat(seq(optional($._statement), $.newline)),
+      repeat(seq(optional($.statement_chain), $.newline)),
       'endfor'
     ),
   }
