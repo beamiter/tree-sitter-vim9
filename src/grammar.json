@@ -23,6 +23,13 @@
                 ]
               },
               {
+                "type": "REPEAT",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "continued_line"
+                }
+              },
+              {
                 "type": "SYMBOL",
                 "name": "newline"
               }
@@ -33,8 +40,28 @@
           "type": "CHOICE",
           "members": [
             {
-              "type": "SYMBOL",
-              "name": "_statement"
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "SYMBOL",
+                      "name": "_statement"
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
+                },
+                {
+                  "type": "REPEAT",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "continued_line"
+                  }
+                }
+              ]
             },
             {
               "type": "BLANK"
@@ -47,21 +74,18 @@
       "type": "PATTERN",
       "value": "\\n"
     },
-    "line_continuation": {
-      "type": "TOKEN",
-      "content": {
-        "type": "SEQ",
-        "members": [
-          {
-            "type": "PATTERN",
-            "value": "[ \\t]*\\\\"
-          },
-          {
-            "type": "PATTERN",
-            "value": "[^\\n]*"
-          }
-        ]
-      }
+    "continued_line": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "[ \\t]*\\\\[^\\n]*"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "newline"
+        }
+      ]
     },
     "_statement": {
       "type": "CHOICE",
@@ -481,8 +505,17 @@
       }
     },
     "expr_statement": {
-      "type": "SYMBOL",
-      "name": "call_expression"
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "call_expression"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "method_call"
+        }
+      ]
     },
     "_name": {
       "type": "TOKEN",
@@ -980,7 +1013,7 @@
           "members": [
             {
               "type": "SYMBOL",
-              "name": "arguments"
+              "name": "expr"
             },
             {
               "type": "BLANK"
@@ -2004,10 +2037,6 @@
     {
       "type": "PATTERN",
       "value": "[ \\t\\r\\f]"
-    },
-    {
-      "type": "SYMBOL",
-      "name": "line_continuation"
     }
   ],
   "conflicts": [

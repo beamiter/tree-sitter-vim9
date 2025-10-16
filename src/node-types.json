@@ -216,6 +216,21 @@
     }
   },
   {
+    "type": "continued_line",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "newline",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "def_function",
     "named": true,
     "fields": {},
@@ -523,6 +538,10 @@
       "types": [
         {
           "type": "call_expression",
+          "named": true
+        },
+        {
+          "type": "method_call",
           "named": true
         }
       ]
@@ -842,7 +861,7 @@
       "required": false,
       "types": [
         {
-          "type": "arguments",
+          "type": "expr",
           "named": true
         }
       ]
@@ -926,6 +945,10 @@
         },
         {
           "type": "const_statement",
+          "named": true
+        },
+        {
+          "type": "continued_line",
           "named": true
         },
         {
@@ -1209,11 +1232,6 @@
     "named": false
   },
   {
-    "type": "line_continuation",
-    "named": true,
-    "extra": true
-  },
-  {
     "type": "list",
     "named": false
   },
@@ -1223,11 +1241,11 @@
   },
   {
     "type": "number",
-    "named": true
+    "named": false
   },
   {
     "type": "number",
-    "named": false
+    "named": true
   },
   {
     "type": "option_var",

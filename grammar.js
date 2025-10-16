@@ -6,7 +6,8 @@ module.exports = grammar({
 
   extras: $ => [
     /[ \t\r\f]/,
-    $.line_continuation,
+    // 移除 line_continuation 出现在 extras 中，防止误吞任意 '\'
+    // $.line_continuation,
   ],
 
   conflicts: $ => [
@@ -20,28 +21,40 @@ module.exports = grammar({
   ],
 
   rules: {
+    // 可选增强：在语法层显式支持续行（反斜杠开头的“附加行”）
+    // 如果暂不需要续行功能，可删除 continued_line 并恢复最初的 source_file。
     source_file: $ => seq(
-      repeat(seq(optional($._statement), $.newline)),
-      optional($._statement)
+      repeat(seq(
+        optional($._statement),
+        // 若有续行，则可以跟若干续行行（每个续行行内自带 newline）
+        repeat($.continued_line),
+        $.newline
+      )),
+      optional(seq(
+        optional($._statement),
+        repeat($.continued_line)
+      ))
     ),
 
     newline: $ => /\n/,
 
-    // Lines beginning with '\' are treated as continuation extras and ignored by the parser
-    line_continuation: $ => token(seq(/[ \t]*\\/, /[^\n]*/)),
+    // 原 extras 的 line_continuation 删除。这里提供基于语法层的续行行定义：
+    // 规则：行首可有若干空格/Tab，然后一个反斜杠，后面到行尾任何内容，最后必须是换行符。
+    // 说明：这不是 Vim 的全部细节（例如续行与注释/字符串的交互），但能避免误吞。
+    continued_line: $ => seq(/[ \t]*\\[^\n]*/, $.newline),
 
     // Prefer reserved constructs first, then fallback to generic command.
     _statement: $ => choice(
       $.comment,
       $.vim9script,
-      $.const_statement,        // 新增 const
-      $.let_statement,          // var ...
-      $.assignment,             // lvalue = expr
-      $.def_function,           // def ... enddef / export def ... enddef
-      $.if_statement,           // if/elseif/else/endif
-      $.for_statement,          // for ... in ... endfor
-      $.expr_statement,         // call-expression statement
-      $.command                 // fallback: generic Ex command
+      $.const_statement,
+      $.let_statement,
+      $.assignment,
+      $.def_function,
+      $.if_statement,
+      $.for_statement,
+      $.expr_statement,
+      $.command
     ),
 
     // vim9script directive
@@ -50,7 +63,7 @@ module.exports = grammar({
     // Comment lines
     comment: $ => seq('#', /[^\n]*/),
 
-    // 安全的结构化命令参数项（不含 raw_text，避免与兜底分支冲突）
+    // 安全参数项
     safe_arg: $ => choice(
       $.string,
       $.number,
@@ -66,28 +79,21 @@ module.exports = grammar({
     ),
 
     // Generic Ex command
-    // 定点爆破：先匹配带安全参数的分支；其次仅命令名；最后兜底：安全参数若干 + 行尾 raw_text
     command: $ => choice(
       prec(2, seq($.command_name, $.command_args)),
       prec(1, seq($.command_name)),
       prec(0, seq($.command_name, repeat($.safe_arg), $.raw_text))
     ),
 
-    // Command names: require at least two characters to avoid single-letter scope prefixes like 'g', 'b', ...
     command_name: $ => token(prec(1, /[A-Za-z][A-Za-z0-9_-]+!?/)),
-
-    // Command args：仅接受安全参数项；不含 raw_text，以避免与兜底分支产生二义性
     command_args: $ => repeat1($.safe_arg),
 
-    // Angle-bracketed keys (<C-w>, <leader>, <CR>, <Plug> ...)
-    // 修正：不跨行
     special_key: $ => token(seq('<', /[^>\n]+/, '>')),
     pipe: $ => token('|'),
 
-    // Raw text chunk until EOL; low precedence lets specific tokens win
     raw_text: $ => token(prec(-1, /[^\n]+/)),
 
-    // const declaration（新增）
+    // const/var
     const_statement: $ => prec(2, seq(
       'const',
       $.identifier,
@@ -96,7 +102,6 @@ module.exports = grammar({
       $.expr
     )),
 
-    // var declaration（支持可选类型注解）
     let_statement: $ => prec(2, seq(
       'var',
       $.identifier,
@@ -105,7 +110,6 @@ module.exports = grammar({
       $.expr
     )),
 
-    // Assignment
     assignment: $ => prec(2, seq($.lvalue, '=', $.expr)),
 
     lvalue: $ => choice(
@@ -115,25 +119,22 @@ module.exports = grammar({
       $.index_expression
     ),
 
-    // Scope variables: g:, b:, w:, t:, l:, v:, s:
     scope_var: $ => token(seq(/[gbwtlvs]:/, /[A-Za-z_][A-Za-z0-9_]*/)),
-
-    // Option variables: &name
     option_var: $ => token(seq('&', /[A-Za-z0-9_]+/)),
 
-    // Indexing binds tighter than list literals
     index_expression: $ => prec.left(10, seq($.expr, '[', $.expr, ']')),
 
-    // Expression-only statement: function call
-    expr_statement: $ => $.call_expression,
+    // 表达式语句：加入 method_call（修复）
+    expr_statement: $ => choice(
+      $.call_expression,
+      $.method_call
+    ),
 
-    // 统一 name token
     _name: $ => token(/[A-Za-z_][A-Za-z0-9_]*(?:#[A-Za-z_][A-Za-z0-9_]*)*/),
 
     identifier: $ => alias($._name, $.identifier),
     function_name: $ => alias($._name, $.function_name),
 
-    // Function call: name '(' args ')', with immediate '(' to disambiguate from command
     call_expression: $ => seq(
       $.function_name,
       token.immediate('('),
@@ -141,10 +142,8 @@ module.exports = grammar({
       ')'
     ),
 
-    // 通用实参列表
     arguments: $ => seq($.expr, repeat(seq(',', $.expr))),
 
-    // 箭头函数：提高优先级并设为右结合
     arrow_function: $ => prec.right(2, seq(
       '(',
       optional(seq($.parameter, repeat(seq(',', $.parameter)))),
@@ -153,7 +152,6 @@ module.exports = grammar({
       choice($.expr, $.block)
     )),
 
-    // 箭头函数体的块（行分隔用显式换行符）
     block: $ => seq(
       '{',
       repeat(choice(
@@ -163,7 +161,6 @@ module.exports = grammar({
       '}'
     ),
 
-    // Vim9 def ... enddef（支持可选 export）
     def_function: $ => seq(
       optional('export'),
       'def',
@@ -178,7 +175,6 @@ module.exports = grammar({
 
     parameter: $ => seq($.identifier, optional(seq(':', $.type))),
 
-    // Types (basic + generic + allow identifiers)
     type: $ => choice(
       'bool', 'number', 'float', 'string', 'any',
       seq('list', '<', $.type, '>'),
@@ -186,7 +182,6 @@ module.exports = grammar({
       $.identifier
     ),
 
-    // Expressions
     expr: $ => choice(
       $.string,
       $.number,
@@ -196,8 +191,8 @@ module.exports = grammar({
       $.option_var,
       $.identifier,
       $.call_expression,
-      $.arrow_function,          // 新增
-      $.method_call,             // 新增 expr->func(args)
+      $.arrow_function,
+      $.method_call,
       $.list,
       $.dict,
       $.index_expression,
@@ -207,14 +202,13 @@ module.exports = grammar({
       $.ternary_expression
     ),
 
-    // 括号表达式支持多实参（逗号分隔）
+    // 改为只允许单一表达式，降低冲突（修复）
     parenthesized_expression: $ => seq(
       '(',
-      optional($.arguments),
+      optional($.expr),
       ')'
     ),
 
-    // List literal; support optional newlines between items and trailing comma
     list: $ => prec(1, seq(
       '[',
       optional(seq(
@@ -235,7 +229,6 @@ module.exports = grammar({
     pair: $ => seq($.dict_key, ':', $.expr),
     dict_key: $ => choice($.identifier, $.string),
 
-    // Dict literal; support optional newlines between pairs and trailing comma
     dict: $ => seq(
       '{',
       optional(seq(
@@ -267,7 +260,6 @@ module.exports = grammar({
       seq('-', $.expr)
     )),
 
-    // 方法/管道调用（新增）：expr -> identifier(...)
     method_call: $ => prec.left(9, seq(
       $.expr,
       '->',
@@ -277,7 +269,6 @@ module.exports = grammar({
       ')'
     )),
 
-    // 扩展比较/匹配等运算符
     binary_expression: $ => choice(
       // String concat
       prec.left(3, seq($.expr, '..', $.expr)),
@@ -308,7 +299,6 @@ module.exports = grammar({
 
     ternary_expression: $ => prec.right(0, seq($.expr, '?', $.expr, ':', $.expr)),
 
-    // if / elseif / else / endif
     if_statement: $ => seq(
       'if',
       $.expr,
@@ -329,7 +319,6 @@ module.exports = grammar({
       repeat(seq(optional($._statement), $.newline))
     ),
 
-    // for ... in ... endfor
     for_statement: $ => seq(
       'for',
       $.identifier,
