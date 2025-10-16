@@ -1,82 +1,63 @@
 // grammar.js
-// Tree-sitter grammar for a pragmatic subset of Vim9 script sufficient to parse the provided .vimrc.
+// Pragmatic Tree-sitter grammar for a Vim9-like .vimrc subset.
 //
-// Key design points:
-// - Newlines are significant separators. They are not part of `extras`.
-// - Comments beginning with '#' are treated as standalone statement lines.
-// - Generic Ex commands (set, map/*noremap, autocmd, augroup, command!, colorscheme, Plug, etc.)
-//   are parsed by a flexible `command` rule whose args run until newline.
-// - Function-call expressions require an immediate '(' after the name to avoid ambiguity with commands.
-// - Indexing binds tighter than list literals to avoid ambiguity.
-// - Line continuation lines starting with "\" are ignored as extras to allow wrapped long commands.
-// - Statements must be separated by newlines at file and block scope to prevent `command_name` vs next
-//   statement ambiguity.
-//
-// Implementation notes:
-// - identifier/function_name share one underlying token (_name) and are distinguished by context.
-// - raw_text allows '<' and '>' so mapping RHS like '<C-W>5<' parse without ERROR while special_key still wins.
+// Design:
+// - Newlines are significant separators (not extras).
+// - Comments starting with '#' are standalone statement lines.
+// - Generic Ex commands are parsed by `command`.
+// - Function calls require an immediate '(' to avoid ambiguity with commands.
+// - Indexing binds tighter than list/dict literals.
+// - '\' line continuations are ignored as extras.
+// - Prefer reserved constructs (vim9script/var/def/if/for/assignments) over generic commands.
+// - identifier/function_name share one token; context decides via immediate '(' for calls.
+// - raw_text 用作命令兜底：当命令参数中出现复杂 RHS 时整行吞掉，避免 ERROR。
 
 module.exports = grammar({
   name: 'vim9',
 
   extras: $ => [
-    // Whitespace but NOT newline; newline is a significant separator
     /[ \t\r\f]/,
     $.line_continuation,
   ],
 
-  // Resolve ambiguity where a scope variable following a command name could be either a command arg
-  // or the start of a new assignment statement.
   conflicts: $ => [
     [$.command, $.assignment],
     [$.command, $.let_statement],
+    [$.command, $.expr_statement],
   ],
 
   rules: {
-    // File: statements separated by newlines, allowing extra blank lines.
     source_file: $ => seq(
       repeat(seq(optional($._statement), $.newline)),
       optional($._statement)
     ),
 
-    // Newline token (significant)
     newline: $ => /\n/,
 
     // Lines beginning with '\' are treated as continuation extras and ignored by the parser
     line_continuation: $ => token(seq(/[ \t]*\\/, /[^\n]*/)),
 
-    // A statement can be a comment line, command, assignment, vim9script directive, function def,
-    // expression statement (function call), or control structures.
+    // Prefer reserved constructs first, then fallback to generic command.
     _statement: $ => choice(
       $.comment,
       $.vim9script,
-      $.command,
-      $.assignment,
-      $.let_statement,
-      $.expr_statement,
-      $.def_function,
-      $.if_statement,
-      $.for_statement
+      $.let_statement,          // var ...
+      $.assignment,             // lvalue = expr
+      $.def_function,           // def ... enddef
+      $.if_statement,           // if/elseif/else/endif
+      $.for_statement,          // for ... in ... endfor
+      $.expr_statement,         // call-expression statement
+      $.command                 // fallback: generic Ex command
     ),
 
     // vim9script directive
     vim9script: $ => 'vim9script',
 
-    // Comment lines: start with '#' and go to end-of-line
+    // Comment lines
     comment: $ => seq('#', /[^\n]*/),
 
-    // Generic Ex command support (e.g., set, nnoremap, autocmd, augroup, command!, colorscheme, Plug)
-    command: $ => seq(
-      $.command_name,
-      optional($.command_args)
-    ),
-
-    // Command names allow trailing '!' (e.g., command!)
-    command_name: $ => token(/[A-Za-z][A-Za-z0-9_-]*!?/),
-
-    // Command arguments: a loose sequence of tokens until newline.
-    // Includes strings, numbers, vars, identifiers, angle-bracket keys, pipes, lists/dicts, and raw chunks.
-    command_args: $ => repeat1(choice(
+    // 安全的结构化命令参数项（不含 raw_text，避免与兜底分支冲突）
+    safe_arg: $ => choice(
       $.string,
       $.number,
       $.float,
@@ -87,23 +68,35 @@ module.exports = grammar({
       $.pipe,
       $.list,
       $.dict,
-      $.raw_text
-    )),
+      $.call_expression
+    ),
 
-    // Angle-bracketed keys (e.g., <C-W>w, <leader>, <Space>, <Plug>, <CR>, <c-u>, <expr>, <nowait>)
+    // Generic Ex command
+    // 定点爆破：先匹配带安全参数的分支；其次仅命令名；最后兜底：安全参数若干 + 行尾 raw_text
+    command: $ => choice(
+      prec(2, seq($.command_name, $.command_args)),
+      prec(1, seq($.command_name)),
+      prec(0, seq($.command_name, repeat($.safe_arg), $.raw_text))
+    ),
+
+    // Command names: require at least two characters to avoid single-letter scope prefixes like 'g', 'b', ...
+    command_name: $ => token(prec(1, /[A-Za-z][A-Za-z0-9_-]+!?/)),
+
+    // Command args：仅接受安全参数项；不含 raw_text，以避免与兜底分支产生二义性
+    command_args: $ => repeat1($.safe_arg),
+
+    // Angle-bracketed keys (<C-w>, <leader>, <CR>, <Plug> ...)
     special_key: $ => token(seq('<', /[^>]+/, '>')),
     pipe: $ => token('|'),
 
-    // Raw text chunk until end-of-line.
-    // Low precedence. Allows parentheses, braces, quotes, '=', ':', and now also '<' and '>'.
-    // This lets mapping RHS with unpaired '<' or mixed content parse, while <key> still matches special_key.
-    raw_text: $ => token(prec(-1, /[^{}\(\)\[\]\n]+/)),
+    // Raw text chunk until EOL; low precedence lets specific tokens win
+    raw_text: $ => token(prec(-1, /[^\n]+/)),
 
-    // Variable declaration (vim9 'var')
-    let_statement: $ => seq('var', $.identifier, '=', $.expr),
+    // var declaration
+    let_statement: $ => prec(2, seq('var', $.identifier, '=', $.expr)),
 
-    // Assignment to lvalues
-    assignment: $ => seq($.lvalue, '=', $.expr),
+    // Assignment
+    assignment: $ => prec(2, seq($.lvalue, '=', $.expr)),
 
     lvalue: $ => choice(
       $.scope_var,
@@ -112,20 +105,19 @@ module.exports = grammar({
       $.index_expression
     ),
 
-    // Scope variables: g:, b:, w:, t:, l:, v:, s: followed by identifier
+    // Scope variables: g:, b:, w:, t:, l:, v:, s:
     scope_var: $ => token(seq(/[gbwtlvs]:/, /[A-Za-z_][A-Za-z0-9_]*/)),
 
-    // Option variables: &name (e.g., &t_8f, &termguicolors)
+    // Option variables: &name
     option_var: $ => token(seq('&', /[A-Za-z0-9_]+/)),
 
     // Indexing binds tighter than list literals
     index_expression: $ => prec.left(10, seq($.expr, '[', $.expr, ']')),
 
-    // Expression-only statement (primarily function calls)
+    // Expression-only statement: function call
     expr_statement: $ => $.call_expression,
 
-    // Function call: name '(' [args] ')'
-    // Require immediate '(' after function name to avoid ambiguity with commands.
+    // Function call: name '(' args ')', with immediate '(' to disambiguate from command
     call_expression: $ => seq(
       $.function_name,
       token.immediate('('),
@@ -133,13 +125,10 @@ module.exports = grammar({
       ')'
     ),
 
-    // Single unified name token supporting optional # segments.
+    // 单个统一 name token
     _name: $ => token(/[A-Za-z_][A-Za-z0-9_]*(?:#[A-Za-z_][A-Za-z0-9_]*)*/),
 
-    // Expose identifier and function_name via alias to avoid lexer competition
     identifier: $ => alias($._name, $.identifier),
-
-    // Function names may include '#' segments (e.g., coc#pum#visible)
     function_name: $ => alias($._name, $.function_name),
 
     // Expressions
@@ -161,21 +150,49 @@ module.exports = grammar({
       $.ternary_expression
     ),
 
-    parenthesized_expression: $ => seq('(', $.expr, ')'),
+    // 括号表达式支持多实参（逗号分隔）
+    parenthesized_expression: $ => seq(
+      '(',
+      optional(seq($.expr, repeat(seq(',', $.expr)))),
+      ')'
+    ),
 
-    // List literal; lower precedence than index to avoid conflicts
+    // List literal; support optional newlines between items and trailing comma
     list: $ => prec(1, seq(
       '[',
-      optional(seq($.expr, repeat(seq(',', $.expr)), optional(','))),
+      optional(seq(
+        repeat($.newline),
+        $.expr,
+        repeat(seq(
+          repeat($.newline),
+          ',',
+          repeat($.newline),
+          $.expr
+        )),
+        optional(seq(repeat($.newline), ','))
+      )),
+      repeat($.newline),
       ']'
     )),
 
     pair: $ => seq($.dict_key, ':', $.expr),
     dict_key: $ => choice($.identifier, $.string),
 
+    // Dict literal; support optional newlines between pairs and trailing comma
     dict: $ => seq(
       '{',
-      optional(seq($.pair, repeat(seq(',', $.pair)), optional(','))),
+      optional(seq(
+        repeat($.newline),
+        $.pair,
+        repeat(seq(
+          repeat($.newline),
+          ',',
+          repeat($.newline),
+          $.pair
+        )),
+        optional(seq(repeat($.newline), ','))
+      )),
+      repeat($.newline),
       '}'
     ),
 
@@ -184,9 +201,7 @@ module.exports = grammar({
     boolean: $ => token(choice('true', 'false')),
 
     string: $ => token(choice(
-      // Double-quoted with escapes
       /"(?:[^"\\]|\\.)*"/,
-      // Single-quoted
       /'(?:[^'\\]|\\.)*'/
     )),
 
@@ -203,7 +218,7 @@ module.exports = grammar({
       prec.left(5, seq($.expr, '-', $.expr)),
       prec.left(6, seq($.expr, '*', $.expr)),
       prec.left(6, seq($.expr, '/', $.expr)),
-      // Comparisons (including =~# used in the .vimrc)
+      // Comparisons
       prec.left(4, seq($.expr, '==', $.expr)),
       prec.left(4, seq($.expr, '!=', $.expr)),
       prec.left(4, seq($.expr, '=~#', $.expr)),
@@ -226,14 +241,13 @@ module.exports = grammar({
       optional(seq($.parameter, repeat(seq(',', $.parameter)))),
       ')',
       optional(seq(':', $.type)),
-      // Body: statements separated by newline (allow blank lines)
       repeat(seq(optional($._statement), $.newline)),
       'enddef'
     ),
 
     parameter: $ => seq($.identifier, optional(seq(':', $.type))),
 
-    // Basic types; allow identifiers as fallbacks (e.g., custom types)
+    // Types (basic + generic + allow identifiers)
     type: $ => choice(
       'bool', 'number', 'float', 'string',
       seq('list', '<', $.type, '>'),
@@ -245,7 +259,6 @@ module.exports = grammar({
     if_statement: $ => seq(
       'if',
       $.expr,
-      // Body: statements/newlines until elseif/else/endif
       repeat(seq(optional($._statement), $.newline)),
       repeat($.elseif_clause),
       optional($.else_clause),
