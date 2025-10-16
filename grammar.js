@@ -11,6 +11,10 @@
 // - Line continuation lines starting with "\" are ignored as extras to allow wrapped long commands.
 // - Statements must be separated by newlines at file and block scope to prevent `command_name` vs next
 //   statement ambiguity.
+//
+// Implementation notes:
+// - identifier/function_name share one underlying token (_name) and are distinguished by context.
+// - raw_text allows '<' and '>' so mapping RHS like '<C-W>5<' parse without ERROR while special_key still wins.
 
 module.exports = grammar({
   name: 'vim9',
@@ -91,9 +95,9 @@ module.exports = grammar({
     pipe: $ => token('|'),
 
     // Raw text chunk until end-of-line.
-    // Low precedence. Excludes angle brackets and square brackets to prefer structured tokens,
-    // but allows parentheses, braces, quotes, '=' and ':' so statusline and mapping RHS parse well.
-    raw_text: $ => token(prec(-1, /[^{}\(\)\[\]\n<>]+/)),
+    // Low precedence. Allows parentheses, braces, quotes, '=', ':', and now also '<' and '>'.
+    // This lets mapping RHS with unpaired '<' or mixed content parse, while <key> still matches special_key.
+    raw_text: $ => token(prec(-1, /[^{}\(\)\[\]\n]+/)),
 
     // Variable declaration (vim9 'var')
     let_statement: $ => seq('var', $.identifier, '=', $.expr),
@@ -129,11 +133,14 @@ module.exports = grammar({
       ')'
     ),
 
+    // Single unified name token supporting optional # segments.
+    _name: $ => token(/[A-Za-z_][A-Za-z0-9_]*(?:#[A-Za-z_][A-Za-z0-9_]*)*/),
+
+    // Expose identifier and function_name via alias to avoid lexer competition
+    identifier: $ => alias($._name, $.identifier),
+
     // Function names may include '#' segments (e.g., coc#pum#visible)
-    function_name: $ => token(seq(
-      /[A-Za-z_][A-Za-z0-9_]*/,
-      repeat(seq('#', /[A-Za-z_][A-Za-z0-9_]*/))
-    )),
+    function_name: $ => alias($._name, $.function_name),
 
     // Expressions
     expr: $ => choice(
@@ -171,8 +178,6 @@ module.exports = grammar({
       optional(seq($.pair, repeat(seq(',', $.pair)), optional(','))),
       '}'
     ),
-
-    identifier: $ => token(/[A-Za-z_][A-Za-z0-9_]*/),
 
     number: $ => token(/[0-9]+/),
     float: $ => token(/[0-9]+\.[0-9]+/),
