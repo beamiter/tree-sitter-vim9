@@ -27,7 +27,20 @@ module.exports = grammar({
   ],
 
   rules: {
-    // ========== 行级与顶层组织 ==========
+    // ========== 顶层入口（必须是第一条规则） ==========
+    // 顶层：结构化块 或 行（含链式 + 续行）
+    source_file: $ => seq(
+      repeat(choice(
+        $.structured_statement,
+        seq(optional($.statement_chain), repeat($.continued_line), $.newline)
+      )),
+      optional(seq(
+        optional($.statement_chain),
+        repeat($.continued_line)
+      ))
+    ),
+
+    // ========== 行级组织 ==========
     // 可链式语句（同一行可用 | 连接多条）
     chainable_statement: $ => choice(
       $.comment,
@@ -51,18 +64,6 @@ module.exports = grammar({
       $.def_function,
       $.if_statement,
       $.for_statement
-    ),
-
-    // 顶层：结构化块 或 行（含链式 + 续行）
-    source_file: $ => seq(
-      repeat(choice(
-        $.structured_statement,
-        seq(optional($.statement_chain), repeat($.continued_line), $.newline)
-      )),
-      optional(seq(
-        optional($.statement_chain),
-        repeat($.continued_line)
-      ))
     ),
 
     newline: $ => /\n/,

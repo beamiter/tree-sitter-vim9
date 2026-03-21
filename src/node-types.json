@@ -131,7 +131,6 @@
   {
     "type": "chainable_statement",
     "named": true,
-    "root": true,
     "fields": {},
     "children": {
       "multiple": false,
@@ -224,6 +223,52 @@
     }
   },
   {
+    "type": "continued_line",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "newline",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "def_function",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "newline",
+          "named": true
+        },
+        {
+          "type": "parameter",
+          "named": true
+        },
+        {
+          "type": "statement_chain",
+          "named": true
+        },
+        {
+          "type": "type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "dict",
     "named": true,
     "fields": {},
@@ -256,6 +301,48 @@
         },
         {
           "type": "string",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "else_clause",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "newline",
+          "named": true
+        },
+        {
+          "type": "statement_chain",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "elseif_clause",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expr",
+          "named": true
+        },
+        {
+          "type": "newline",
+          "named": true
+        },
+        {
+          "type": "statement_chain",
           "named": true
         }
       ]
@@ -360,6 +447,37 @@
     }
   },
   {
+    "type": "for_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expr",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "list_pattern",
+          "named": true
+        },
+        {
+          "type": "newline",
+          "named": true
+        },
+        {
+          "type": "statement_chain",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "function_name",
     "named": true,
     "fields": {},
@@ -384,6 +502,37 @@
       "types": [
         {
           "type": "identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "if_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "else_clause",
+          "named": true
+        },
+        {
+          "type": "elseif_clause",
+          "named": true
+        },
+        {
+          "type": "expr",
+          "named": true
+        },
+        {
+          "type": "newline",
+          "named": true
+        },
+        {
+          "type": "statement_chain",
           "named": true
         }
       ]
@@ -441,6 +590,21 @@
         },
         {
           "type": "newline",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "list_pattern",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
           "named": true
         }
       ]
@@ -601,6 +765,34 @@
     }
   },
   {
+    "type": "source_file",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "continued_line",
+          "named": true
+        },
+        {
+          "type": "newline",
+          "named": true
+        },
+        {
+          "type": "statement_chain",
+          "named": true
+        },
+        {
+          "type": "structured_statement",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "statement_chain",
     "named": true,
     "fields": {},
@@ -610,6 +802,29 @@
       "types": [
         {
           "type": "chainable_statement",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "structured_statement",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "def_function",
+          "named": true
+        },
+        {
+          "type": "for_statement",
+          "named": true
+        },
+        {
+          "type": "if_statement",
           "named": true
         }
       ]
@@ -833,7 +1048,35 @@
     "named": false
   },
   {
+    "type": "def",
+    "named": false
+  },
+  {
     "type": "dict",
+    "named": false
+  },
+  {
+    "type": "else",
+    "named": false
+  },
+  {
+    "type": "elseif",
+    "named": false
+  },
+  {
+    "type": "enddef",
+    "named": false
+  },
+  {
+    "type": "endfor",
+    "named": false
+  },
+  {
+    "type": "endif",
+    "named": false
+  },
+  {
+    "type": "export",
     "named": false
   },
   {
@@ -843,6 +1086,18 @@
   {
     "type": "float",
     "named": true
+  },
+  {
+    "type": "for",
+    "named": false
+  },
+  {
+    "type": "if",
+    "named": false
+  },
+  {
+    "type": "in",
+    "named": false
   },
   {
     "type": "list",
