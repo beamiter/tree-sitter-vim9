@@ -24,6 +24,8 @@ GRAMMAR_REPLACEMENTS = [
         "    [$.blank_line, $.block_expression],\n  ],",
         "    [$.blank_line, $.block_expression],\n"
         "    [$._expression, $.lambda_expression],\n"
+        "    [$.member_lvalue, $.member_expression],\n"
+        "    [$.index_lvalue, $.index_expression],\n"
         "  ],",
     ),
 ]
