@@ -118,6 +118,7 @@ def main() -> None:
     for relative in [
         "scripts/apply-v0.2-upgrade.py",
         ".github/workflows/refresh-generated.yml",
+        ".github/workflows/ci.yml",
     ]:
         target = root / relative
         if target.exists():
