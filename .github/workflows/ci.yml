@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parser:
+    name: Parser (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: tree-sitter/setup-action/cli@v2
+        with:
+          tree-sitter-ref: v0.25.10
+      - uses: tree-sitter/parser-test-action@v2
+
+  queries:
+    name: Editor queries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: tree-sitter/setup-action/cli@v2
+        with:
+          tree-sitter-ref: v0.25.10
+      - run: tree-sitter build
+      - run: node scripts/test-queries.mjs
+
+  bindings:
+    name: Language bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: tree-sitter/setup-action/cli@v2
+        with:
+          tree-sitter-ref: v0.25.10
+      - uses: tree-sitter/parser-test-action@v2
+        with:
+          generate: false
+          test-parser: false
+          test-node: true
+          node-version: "22"
+          test-python: true
+          python-version: "3.12"
+          test-rust: true
+          test-go: true
+          go-version: "1.23"
+      - name: Build with CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build --config Release
+
+  swift:
+    name: Swift binding
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: swift test
