@@ -25,7 +25,23 @@ jobs:
           ref: agent/vim9-parser-evolution
           fetch-depth: 0
       - name: Apply repository upgrade
-        run: python scripts/apply-v0.2-upgrade.py
+        id: upgrade
+        continue-on-error: true
+        run: python scripts/apply-v0.2-upgrade.py > /tmp/upgrade.log 2>&1
+      - name: Upload bootstrap diagnostics
+        if: steps.upgrade.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: upgrade-error
+          path: |
+            /tmp/upgrade.log
+            scripts/.upgrade-payload/*.txt
+          if-no-files-found: error
+      - name: Stop after bootstrap failure
+        if: steps.upgrade.outcome == 'failure'
+        run: |
+          cat /tmp/upgrade.log
+          exit 1
       - uses: tree-sitter/setup-action/cli@v2
         with:
           tree-sitter-ref: v0.25.10
