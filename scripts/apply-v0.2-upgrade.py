@@ -28,6 +28,16 @@ GRAMMAR_REPLACEMENTS = [
         "    [$.index_lvalue, $.index_expression],\n"
         "  ],",
     ),
+    (
+        "    enum_value: $ => seq(\n"
+        "      field('name', $.identifier),\n"
+        "      optional(field('arguments', $.arguments)),\n"
+        "    ),",
+        "    enum_value: $ => prec(1, seq(\n"
+        "      field('name', $.identifier),\n"
+        "      optional(field('arguments', $.arguments)),\n"
+        "    )),",
+    ),
 ]
 
 
