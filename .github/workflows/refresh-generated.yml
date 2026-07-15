@@ -1,0 +1,43 @@
+name: Refresh generated parser
+
+on:
+  push:
+    branches: [agent/vim9-parser-evolution]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-vim9-generated
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Apply repository upgrade
+        run: python scripts/apply-v0.2-upgrade.py
+      - uses: tree-sitter/setup-action/cli@v2
+        with:
+          tree-sitter-ref: v0.25.10
+      - name: Generate parser
+        run: tree-sitter generate --abi 15
+      - name: Update and run corpus tests
+        run: |
+          tree-sitter test --update
+          tree-sitter test
+      - name: Validate queries
+        run: |
+          tree-sitter build
+          node scripts/test-queries.mjs
+      - name: Commit upgraded repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: evolve Vim9 grammar and bindings"
+          git push
