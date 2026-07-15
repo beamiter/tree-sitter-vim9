@@ -31,6 +31,10 @@ GRAMMAR_REPLACEMENTS = [
         "field('consequence', $._body)",
         "optional(field('consequence', $._body))",
     ),
+    (
+        "    [$.type_name, $.identifier],\n  ],",
+        "    [$.type_name, $.identifier],\n    [$.parameter, $._expression],\n  ],",
+    ),
 ]
 
 
