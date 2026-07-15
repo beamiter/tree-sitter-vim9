@@ -108,9 +108,28 @@ jobs:
           exit 1
 
       - name: Commit upgraded repository
+        id: commit
+        continue-on-error: true
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "feat: evolve Vim9 grammar and bindings"
-          git push origin HEAD:agent/vim9-parser-evolution
+          {
+            set -x
+            git status --short
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git status --short
+            git commit -m "feat: evolve Vim9 grammar and bindings"
+            git push origin HEAD:agent/vim9-parser-evolution
+          } > /tmp/commit.log 2>&1
+      - name: Upload commit diagnostics
+        if: steps.commit.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: commit-error
+          path: /tmp/commit.log
+          if-no-files-found: error
+      - name: Stop after commit failure
+        if: steps.commit.outcome == 'failure'
+        run: |
+          cat /tmp/commit.log
+          exit 1
