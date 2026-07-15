@@ -1,16 +1,9 @@
 #ifndef TREE_SITTER_VIM_H_
 #define TREE_SITTER_VIM_H_
 
-typedef struct TSLanguage TSLanguage;
+#include "tree-sitter-vim9.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-const TSLanguage *tree_sitter_vim(void);
-
-#ifdef __cplusplus
-}
-#endif
+// Source compatibility for consumers of the pre-0.2 header.
+#define tree_sitter_vim tree_sitter_vim9
 
 #endif // TREE_SITTER_VIM_H_

@@ -1,0 +1,11 @@
+(function_definition) @fold
+(if_statement) @fold
+(for_statement) @fold
+(while_statement) @fold
+(try_statement) @fold
+(class_definition) @fold
+(interface_definition) @fold
+(enum_definition) @fold
+(list_expression) @fold
+(dictionary_expression) @fold
+(block_expression) @fold

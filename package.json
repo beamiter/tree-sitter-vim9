@@ -1,8 +1,10 @@
 {
   "name": "tree-sitter-vim9",
-  "version": "0.1.0",
-  "description": "tree-sitter vimscript9 parser",
+  "version": "0.2.0",
+  "description": "A Vim9-first Tree-sitter grammar with typed syntax, modern control flow, queries, and multi-language bindings",
   "repository": "https://github.com/beamiter/tree-sitter-vim9",
+  "homepage": "https://github.com/beamiter/tree-sitter-vim9#readme",
+  "bugs": "https://github.com/beamiter/tree-sitter-vim9/issues",
   "license": "MIT",
   "author": {
     "name": "beamiter",
@@ -14,7 +16,9 @@
     "incremental",
     "parsing",
     "tree-sitter",
-    "vim"
+    "vim",
+    "vim9",
+    "vimscript"
   ],
   "files": [
     "grammar.js",
@@ -24,19 +28,24 @@
     "bindings/node/*",
     "queries/*",
     "src/**",
-    "*.wasm"
+    "*.wasm",
+    "LICENSE",
+    "README.md"
   ],
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "node-addon-api": "^8.5.0",
     "node-gyp-build": "^4.8.4"
   },
   "devDependencies": {
     "prebuildify": "^6.0.1",
-    "tree-sitter": "^0.22.4",
+    "tree-sitter": "^0.25.0",
     "tree-sitter-cli": "^0.25.10"
   },
   "peerDependencies": {
-    "tree-sitter": "^0.22.4"
+    "tree-sitter": "^0.25.0"
   },
   "peerDependenciesMeta": {
     "tree-sitter": {
@@ -44,9 +53,14 @@
     }
   },
   "scripts": {
-    "install": "node-gyp-build",
-    "prestart": "tree-sitter build --wasm",
+    "generate": "tree-sitter generate",
+    "build": "tree-sitter build",
+    "build:wasm": "tree-sitter build --wasm",
     "start": "tree-sitter playground",
-    "test": "node --test bindings/node/*_test.js"
+    "test": "npm run test:corpus && npm run test:queries && npm run test:node",
+    "test:corpus": "tree-sitter test",
+    "test:queries": "node scripts/test-queries.mjs",
+    "test:node": "node --test bindings/node/*_test.js",
+    "prepack": "npm run generate"
   }
 }

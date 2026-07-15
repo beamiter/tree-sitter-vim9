@@ -1,16 +1,15 @@
 [package]
 name = "tree-sitter-vim9"
-description = "tree-sitter vimscript9 parser"
-version = "0.1.0"
+description = "Vim9-first Tree-sitter grammar"
+version = "0.2.0"
 authors = ["beamiter <beamiter@163.com>"]
 license = "MIT"
 readme = "README.md"
-keywords = ["incremental", "parsing", "tree-sitter", "vim"]
+keywords = ["incremental", "parsing", "tree-sitter", "vim", "vim9"]
 categories = ["parser-implementations", "parsing", "text-editors"]
 repository = "https://github.com/beamiter/tree-sitter-vim9"
 edition = "2021"
 autoexamples = false
-
 build = "bindings/rust/build.rs"
 include = [
   "bindings/rust/*",
@@ -18,7 +17,8 @@ include = [
   "queries/*",
   "src/*",
   "tree-sitter.json",
-  "/LICENSE",
+  "LICENSE",
+  "README.md",
 ]
 
 [lib]
