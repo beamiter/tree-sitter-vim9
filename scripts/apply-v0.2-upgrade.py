@@ -20,15 +20,20 @@ OBSOLETE = [
 ]
 
 
+def _join_ascii_parts(directory: Path, pattern: str) -> str:
+    parts = sorted(directory.glob(pattern))
+    if not parts:
+        raise RuntimeError(f"no payload parts matched {pattern!r}")
+    return "".join(part.read_text(encoding="ascii") for part in parts)
+
+
 def main() -> None:
     root = Path.cwd().resolve()
     payload_dir = root / "scripts" / ".upgrade-payload"
-    payload = "".join(
-        part.read_text(encoding="ascii")
-        for part in sorted(payload_dir.glob("part-*.txt"))
-    )
+
+    payload = _join_ascii_parts(payload_dir, "part-*.txt")
     archive = tarfile.open(
-        fileobj=io.BytesIO(base64.b64decode(payload)), mode="r:gz"
+        fileobj=io.BytesIO(base64.b64decode(payload, validate=True)), mode="r:gz"
     )
     for member in archive.getmembers():
         destination = (root / member.name).resolve()
@@ -36,8 +41,8 @@ def main() -> None:
             raise RuntimeError(f"unsafe archive path: {member.name}")
     archive.extractall(root)
 
-    grammar_payload = (payload_dir / "grammar.txt").read_text(encoding="ascii")
-    grammar = gzip.decompress(base64.b64decode(grammar_payload))
+    grammar_payload = _join_ascii_parts(payload_dir, "grammar-part-*.txt")
+    grammar = gzip.decompress(base64.b64decode(grammar_payload, validate=True))
     (root / "grammar.js").write_bytes(grammar)
 
     for relative in OBSOLETE:
