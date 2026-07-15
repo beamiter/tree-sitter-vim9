@@ -24,6 +24,7 @@ jobs:
         with:
           ref: agent/vim9-parser-evolution
           fetch-depth: 0
+
       - name: Apply repository upgrade
         id: upgrade
         continue-on-error: true
@@ -33,28 +34,79 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: upgrade-error
-          path: |
-            /tmp/upgrade.log
-            scripts/.upgrade-payload/*.txt
+          path: /tmp/upgrade.log
           if-no-files-found: error
       - name: Stop after bootstrap failure
         if: steps.upgrade.outcome == 'failure'
         run: |
           cat /tmp/upgrade.log
           exit 1
+
       - uses: tree-sitter/setup-action/cli@v2
         with:
           tree-sitter-ref: v0.25.10
+
       - name: Generate parser
-        run: tree-sitter generate --abi 15
+        id: generate
+        continue-on-error: true
+        run: tree-sitter generate --abi 15 > /tmp/generate.log 2>&1
+      - name: Upload generator diagnostics
+        if: steps.generate.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: generate-error
+          path: |
+            /tmp/generate.log
+            grammar.js
+          if-no-files-found: error
+      - name: Stop after generator failure
+        if: steps.generate.outcome == 'failure'
+        run: |
+          cat /tmp/generate.log
+          exit 1
+
       - name: Update and run corpus tests
+        id: corpus
+        continue-on-error: true
         run: |
-          tree-sitter test --update
-          tree-sitter test
+          tree-sitter test --update > /tmp/corpus.log 2>&1
+          tree-sitter test >> /tmp/corpus.log 2>&1
+      - name: Upload corpus diagnostics
+        if: steps.corpus.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: corpus-error
+          path: |
+            /tmp/corpus.log
+            test/corpus
+          if-no-files-found: error
+      - name: Stop after corpus failure
+        if: steps.corpus.outcome == 'failure'
+        run: |
+          cat /tmp/corpus.log
+          exit 1
+
       - name: Validate queries
+        id: queries
+        continue-on-error: true
         run: |
-          tree-sitter build
-          node scripts/test-queries.mjs
+          tree-sitter build > /tmp/queries.log 2>&1
+          node scripts/test-queries.mjs >> /tmp/queries.log 2>&1
+      - name: Upload query diagnostics
+        if: steps.queries.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: query-error
+          path: |
+            /tmp/queries.log
+            queries
+          if-no-files-found: error
+      - name: Stop after query failure
+        if: steps.queries.outcome == 'failure'
+        run: |
+          cat /tmp/queries.log
+          exit 1
+
       - name: Commit upgraded repository
         run: |
           git config user.name "github-actions[bot]"
