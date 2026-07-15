@@ -19,6 +19,15 @@ OBSOLETE = [
     "src/keywords.h",
 ]
 
+GRAMMAR_REPLACEMENTS = [
+    (
+        "    [$.blank_line, $.block_expression],\n  ],",
+        "    [$.blank_line, $.block_expression],\n"
+        "    [$._expression, $.lambda_expression],\n"
+        "  ],",
+    ),
+]
+
 
 def _join_ascii_parts(directory: Path, pattern: str) -> str:
     parts = sorted(directory.glob(pattern))
@@ -42,8 +51,12 @@ def main() -> None:
     archive.extractall(root)
 
     grammar_payload = _join_ascii_parts(payload_dir, "grammar-part-*.txt")
-    grammar = gzip.decompress(base64.b64decode(grammar_payload, validate=True))
-    (root / "grammar.js").write_bytes(grammar)
+    grammar = gzip.decompress(base64.b64decode(grammar_payload, validate=True)).decode("utf-8")
+    for old, new in GRAMMAR_REPLACEMENTS:
+        if old not in grammar:
+            raise RuntimeError(f"grammar patch target not found: {old}")
+        grammar = grammar.replace(old, new, 1)
+    (root / "grammar.js").write_text(grammar, encoding="utf-8")
 
     for relative in OBSOLETE:
         target = root / relative
