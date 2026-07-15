@@ -58,12 +58,29 @@ GRAMMAR_REPLACEMENTS = [
     ),
 ]
 
+HIGHLIGHT_REPLACEMENTS = [
+    (
+        '  "break"\n  "continue"\n  "finish"\n',
+        "  (break_statement)\n"
+        "  (continue_statement)\n"
+        "  (finish_statement)\n",
+    ),
+]
+
 
 def _join_ascii_parts(directory: Path, pattern: str) -> str:
     parts = sorted(directory.glob(pattern))
     if not parts:
         raise RuntimeError(f"no payload parts matched {pattern!r}")
     return "".join(part.read_text(encoding="ascii") for part in parts)
+
+
+def _apply_replacements(text: str, replacements: list[tuple[str, str]], label: str) -> str:
+    for old, new in replacements:
+        if old not in text:
+            raise RuntimeError(f"{label} patch target not found: {old}")
+        text = text.replace(old, new, 1)
+    return text
 
 
 def main() -> None:
@@ -82,11 +99,13 @@ def main() -> None:
 
     grammar_payload = _join_ascii_parts(payload_dir, "grammar-part-*.txt")
     grammar = gzip.decompress(base64.b64decode(grammar_payload, validate=True)).decode("utf-8")
-    for old, new in GRAMMAR_REPLACEMENTS:
-        if old not in grammar:
-            raise RuntimeError(f"grammar patch target not found: {old}")
-        grammar = grammar.replace(old, new, 1)
+    grammar = _apply_replacements(grammar, GRAMMAR_REPLACEMENTS, "grammar")
     (root / "grammar.js").write_text(grammar, encoding="utf-8")
+
+    highlights_path = root / "queries" / "highlights.scm"
+    highlights = highlights_path.read_text(encoding="utf-8")
+    highlights = _apply_replacements(highlights, HIGHLIGHT_REPLACEMENTS, "highlights")
+    highlights_path.write_text(highlights, encoding="utf-8")
 
     for relative in OBSOLETE:
         target = root / relative
