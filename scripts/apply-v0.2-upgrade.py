@@ -33,7 +33,7 @@ GRAMMAR_REPLACEMENTS = [
     ),
     (
         "    [$.type_name, $.identifier],\n  ],",
-        "    [$.type_name, $.identifier],\n    [$.parameter, $._expression],\n  ],",
+        "    [$.type_name, $.identifier],\n    [$.parameter, $._expression],\n    [$._binding_pattern, $._expression],\n  ],",
     ),
 ]
 
