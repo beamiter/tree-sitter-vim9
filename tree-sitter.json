@@ -2,21 +2,21 @@
   "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
   "grammars": [
     {
-      "name": "vim",
-      "camelcase": "Vim",
-      "title": "Vim",
-      "scope": "source.vim",
+      "name": "vim9",
+      "camelcase": "Vim9",
+      "title": "Vim9 Script",
+      "scope": "source.vim9",
       "file-types": [
         "vim"
       ],
-      "injection-regex": "^vim$",
-      "class-name": "TreeSitterVim"
+      "injection-regex": "^(vim|vim9|vimscript)$",
+      "class-name": "TreeSitterVim9"
     }
   ],
   "metadata": {
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
-    "description": "tree-sitter vimscript9 parser",
+    "description": "A Vim9-first Tree-sitter grammar",
     "authors": [
       {
         "name": "beamiter",

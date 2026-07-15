@@ -1,0 +1,115 @@
+==================
+Class and interface
+==================
+
+interface Named
+  def Name(): string
+endinterface
+
+class Item implements Named
+  public var label: string
+
+  def new(this.label)
+  enddef
+
+  def Name(): string
+    return this.label
+  enddef
+endclass
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (interface_definition
+    (type_name)
+    (newline)
+    (interface_method_declaration
+      (identifier)
+      (parameters)
+      (primitive_type))
+    (newline))
+  (newline)
+  (blank_line
+    (newline))
+  (class_definition
+    (type_name)
+    (type_name)
+    (newline)
+    (statement_chain
+      (variable_declaration
+        (declaration_modifiers)
+        (identifier)
+        (primitive_type)))
+    (newline)
+    (blank_line
+      (newline))
+    (function_definition
+      (identifier)
+      (parameters
+        (parameter
+          (member_lvalue
+            (special_variable)
+            (identifier))))
+      (newline))
+    (newline)
+    (blank_line
+      (newline))
+    (function_definition
+      (identifier)
+      (parameters)
+      (primitive_type)
+      (newline)
+      (statement_chain
+        (return_statement
+          (member_expression
+            (special_variable)
+            (identifier))))
+      (newline))
+    (newline))
+  (newline))
+
+==================
+Enum and type alias
+==================
+
+type Names = list<string>
+
+enum Color
+  Red,
+  Green,
+  Blue
+endenum
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (statement_chain
+    (type_alias_statement
+      (type_name)
+      (generic_type
+        (primitive_type))))
+  (newline)
+  (blank_line
+    (newline))
+  (enum_definition
+    (type_name)
+    (newline)
+    (statement_chain
+      (command_statement
+        (command_name)
+        (command_arguments)))
+    (newline)
+    (statement_chain
+      (command_statement
+        (command_name)
+        (command_arguments)))
+    (newline)
+    (statement_chain
+      (command_statement
+        (command_name)))
+    (newline))
+  (newline))

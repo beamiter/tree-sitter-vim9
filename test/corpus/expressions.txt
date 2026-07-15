@@ -1,0 +1,115 @@
+==================
+Expression precedence and calls
+==================
+
+var result = (left + right * 2) > 10 ? 'large' : 'small'
+var sliced = values[1 : 4]
+var mapped = values->map((_, value) => value * 2)
+var nested = service.client.fetch('key').value
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (ternary_expression
+        (binary_expression
+          (parenthesized_expression
+            (binary_expression
+              (identifier)
+              (binary_expression
+                (identifier)
+                (number))))
+          (number))
+        (string)
+        (string))))
+  (newline)
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (slice_expression
+        (identifier)
+        (number)
+        (number))))
+  (newline)
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (method_call_expression
+        (identifier)
+        (identifier)
+        (arguments
+          (lambda_expression
+            (parameters
+              (parameter
+                (identifier))
+              (parameter
+                (identifier)))
+            (binary_expression
+              (identifier)
+              (number)))))))
+  (newline)
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (member_expression
+        (call_expression
+          (member_expression
+            (member_expression
+              (identifier)
+              (identifier))
+            (identifier))
+          (arguments
+            (string)))
+        (identifier))))
+  (newline))
+
+==================
+Literals and collections
+==================
+
+var values = [1, 0xff, 0b101, 1.5, true, null]
+var config = {
+  name: 'vim9',
+  enabled: true,
+  ['dynamic']: $"value {1 + 1}",
+}
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (list_expression
+        (number)
+        (number)
+        (number)
+        (float)
+        (boolean)
+        (null))))
+  (newline)
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (dictionary_expression
+        (newline)
+        (dictionary_entry
+          (identifier)
+          (string))
+        (newline)
+        (dictionary_entry
+          (identifier)
+          (boolean))
+        (newline)
+        (dictionary_entry
+          (computed_key
+            (string))
+          (interpolated_string))
+        (newline))))
+  (newline))

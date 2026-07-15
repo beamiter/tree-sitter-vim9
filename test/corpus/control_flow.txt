@@ -1,0 +1,146 @@
+==================
+Nested flow control
+==================
+
+export def Sum(values: list<number>): number
+  var total = 0
+  for value in values
+    if value > 0
+      total += value
+    elseif value == 0
+      continue
+    else
+      throw 'negative value'
+    endif
+  endfor
+  return total
+enddef
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (function_definition
+    (function_modifiers)
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (generic_type
+          (primitive_type))))
+    (primitive_type)
+    (newline)
+    (statement_chain
+      (variable_declaration
+        (identifier)
+        (number)))
+    (newline)
+    (for_statement
+      (identifier)
+      (identifier)
+      (newline)
+      (if_statement
+        (binary_expression
+          (identifier)
+          (number))
+        (newline)
+        (statement_chain
+          (command_statement
+            (command_name)
+            (command_arguments)))
+        (newline)
+        (elseif_clause
+          (binary_expression
+            (identifier)
+            (number))
+          (newline)
+          (statement_chain
+            (continue_statement))
+          (newline))
+        (else_clause
+          (newline)
+          (statement_chain
+            (throw_statement
+              (string)))
+          (newline)))
+      (newline))
+    (newline)
+    (statement_chain
+      (return_statement
+        (identifier)))
+    (newline))
+  (newline))
+
+==================
+Try catch finally and while
+==================
+
+def Poll(): bool
+  var attempts = 0
+  while attempts < 3
+    try
+      attempts += 1
+      return Fetch()
+    catch /temporary/
+      continue
+    finally
+      Log(attempts)
+    endtry
+  endwhile
+  return false
+enddef
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (function_definition
+    (identifier)
+    (parameters)
+    (primitive_type)
+    (newline)
+    (statement_chain
+      (variable_declaration
+        (identifier)
+        (number)))
+    (newline)
+    (while_statement
+      (binary_expression
+        (identifier)
+        (number))
+      (newline)
+      (try_statement
+        (newline)
+        (statement_chain
+          (command_statement
+            (command_name)
+            (command_arguments)))
+        (newline)
+        (statement_chain
+          (return_statement
+            (call_expression
+              (identifier)
+              (arguments))))
+        (newline)
+        (catch_clause
+          (regex_pattern)
+          (newline)
+          (statement_chain
+            (continue_statement))
+          (newline))
+        (finally_clause
+          (newline)
+          (statement_chain
+            (command_statement
+              (command_name)
+              (command_arguments)))
+          (newline)))
+      (newline))
+    (newline)
+    (statement_chain
+      (return_statement
+        (boolean)))
+    (newline))
+  (newline))

@@ -10,17 +10,19 @@ type ChildNode = {
 };
 
 type NodeInfo =
-  | (BaseNode & {
-      subtypes: BaseNode[];
-    })
+  | (BaseNode & { subtypes: BaseNode[] })
   | (BaseNode & {
       fields: { [name: string]: ChildNode };
-      children: ChildNode[];
+      children: ChildNode;
     });
 
 type Language = {
   language: unknown;
-  nodeTypeInfo: NodeInfo[];
+  nodeTypeInfo?: NodeInfo[];
+  highlightsQuery: string;
+  localsQuery: string;
+  tagsQuery: string;
+  foldsQuery: string;
 };
 
 declare const language: Language;

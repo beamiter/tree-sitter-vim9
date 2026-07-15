@@ -2,10 +2,10 @@
 
 typedef struct TSLanguage TSLanguage;
 
-TSLanguage *tree_sitter_vim(void);
+const TSLanguage *tree_sitter_vim9(void);
 
 static PyObject* _binding_language(PyObject *Py_UNUSED(self), PyObject *Py_UNUSED(args)) {
-    return PyCapsule_New(tree_sitter_vim(), "tree_sitter.Language", NULL);
+    return PyCapsule_New((void *)tree_sitter_vim9(), "tree_sitter.Language", NULL);
 }
 
 static struct PyModuleDef_Slot slots[] = {
@@ -17,7 +17,7 @@ static struct PyModuleDef_Slot slots[] = {
 
 static PyMethodDef methods[] = {
     {"language", _binding_language, METH_NOARGS,
-     "Get the tree-sitter language for this grammar."},
+     "Get the tree-sitter language for Vim9 script."},
     {NULL, NULL, 0, NULL}
 };
 

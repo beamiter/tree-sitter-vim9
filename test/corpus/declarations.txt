@@ -1,0 +1,82 @@
+==================
+Script header and declarations
+==================
+
+vim9script
+import './lib.vim' as Lib
+export type Names = list<string>
+const LIMIT: number = 10
+final labels = ['one', 'two']
+var cache: dict<any> = {}
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (statement_chain
+    (vim9script_statement))
+  (newline)
+  (statement_chain
+    (import_statement
+      (string)
+      (identifier)))
+  (newline)
+  (statement_chain
+    (type_alias_statement
+      (type_name)
+      (generic_type
+        (primitive_type))))
+  (newline)
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (primitive_type)
+      (number)))
+  (newline)
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (list_expression
+        (string)
+        (string))))
+  (newline)
+  (statement_chain
+    (variable_declaration
+      (identifier)
+      (generic_type
+        (primitive_type))
+      (dictionary_expression)))
+  (newline))
+
+==================
+Assignments and destructuring
+==================
+
+var [first, second; rest] = values
+first += 1
+cache['answer'] = first * second
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (statement_chain
+    (variable_declaration
+      (list_pattern
+        (identifier)
+        (identifier)
+        (identifier))
+      (identifier)))
+  (newline)
+  (statement_chain
+    (command_statement
+      (command_name)
+      (command_arguments)))
+  (newline)
+  (statement_chain
+    (command_statement
+      (command_name)
+      (command_arguments)))
+  (newline))

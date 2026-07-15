@@ -1,0 +1,36 @@
+==================
+Commands and pipelines
+==================
+
+set number
+nnoremap <silent> <leader>x :echo 'x'<CR>
+echo 'first' | echomsg 'second'
+UserCommand! --flag value # trailing comment
+
+---
+
+(source_file
+  (blank_line
+    (newline))
+  (statement_chain
+    (command_statement
+      (command_name)
+      (command_arguments)))
+  (newline)
+  (statement_chain
+    (command_statement
+      (command_name)
+      (command_arguments)))
+  (newline)
+  (statement_chain
+    (echo_statement
+      (string))
+    (echo_statement
+      (string)))
+  (newline)
+  (statement_chain
+    (command_statement
+      (command_name)
+      (command_arguments)))
+  (comment)
+  (newline))
