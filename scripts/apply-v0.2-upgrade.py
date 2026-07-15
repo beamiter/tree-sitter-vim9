@@ -18,6 +18,21 @@ OBSOLETE = [
     "src/keywords.h",
 ]
 
+GRAMMAR_REPLACEMENTS = [
+    (
+        "_body: $ => repeat($._terminated_item),",
+        "_body: $ => repeat1($._terminated_item),",
+    ),
+    (
+        "field('body', $._body)",
+        "optional(field('body', $._body))",
+    ),
+    (
+        "field('consequence', $._body)",
+        "optional(field('consequence', $._body))",
+    ),
+]
+
 
 def main() -> None:
     root = Path.cwd().resolve()
@@ -34,6 +49,14 @@ def main() -> None:
         if root not in destination.parents and destination != root:
             raise RuntimeError(f"unsafe archive path: {member.name}")
     archive.extractall(root)
+
+    grammar_path = root / "grammar.js"
+    grammar = grammar_path.read_text(encoding="utf-8")
+    for old, new in GRAMMAR_REPLACEMENTS:
+        if old not in grammar:
+            raise RuntimeError(f"grammar patch target not found: {old}")
+        grammar = grammar.replace(old, new)
+    grammar_path.write_text(grammar, encoding="utf-8")
 
     for relative in OBSOLETE:
         target = root / relative
