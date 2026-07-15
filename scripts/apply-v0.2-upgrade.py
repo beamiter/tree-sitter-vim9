@@ -29,13 +29,17 @@ GRAMMAR_REPLACEMENTS = [
         "  ],",
     ),
     (
+        "    command_arguments: _ => token(prec(-10, /[^|#\\n]+/)),",
+        "    command_arguments: _ => token(prec(1, /[^|#\\n]+/)),",
+    ),
+    (
         "    enum_values: $ => repeat1(seq(\n"
         "      commaSep1($.enum_value),\n"
         "      optional(','),\n"
         "      optional($.comment),\n"
         "      $.newline,\n"
         "    )),",
-        "    enum_values: $ => prec.left(repeat1(seq(\n"
+        "    enum_values: $ => prec.right(1, repeat1(seq(\n"
         "      commaSep1($.enum_value),\n"
         "      optional(','),\n"
         "      optional($.comment),\n"
