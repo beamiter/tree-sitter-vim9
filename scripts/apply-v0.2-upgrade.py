@@ -29,6 +29,20 @@ GRAMMAR_REPLACEMENTS = [
         "  ],",
     ),
     (
+        "    enum_values: $ => repeat1(seq(\n"
+        "      commaSep1($.enum_value),\n"
+        "      optional(','),\n"
+        "      optional($.comment),\n"
+        "      $.newline,\n"
+        "    )),",
+        "    enum_values: $ => prec.left(repeat1(seq(\n"
+        "      commaSep1($.enum_value),\n"
+        "      optional(','),\n"
+        "      optional($.comment),\n"
+        "      $.newline,\n"
+        "    ))),",
+    ),
+    (
         "    enum_value: $ => seq(\n"
         "      field('name', $.identifier),\n"
         "      optional(field('arguments', $.arguments)),\n"
